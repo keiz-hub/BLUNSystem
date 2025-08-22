@@ -42,7 +42,7 @@
         }
         
         .gradient-bg {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
         .card-hover {
@@ -98,7 +98,7 @@
                 <!-- Admin Access Card -->
                 <div class="bg-white/10 backdrop-blur-md rounded-xl p-8 card-hover fade-in-up">
                     <h3 class="text-2xl font-bold text-white mb-6">Administration</h3>
-                    <button onclick="showAdminPage()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-lg transition-colors pulse-hover w-full">
+                    <button onclick="showAdminPage()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg transition-colors pulse-hover w-full">
                         View Rankings & Results
                     </button>
                 </div>
@@ -114,10 +114,10 @@
             <div class="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8">
                 <h2 id="judgeTitle" class="text-3xl font-bold text-white mb-4">Judge Scoring Panel</h2>
                 <div class="flex flex-wrap gap-4 mb-6">
-                    <select id="contestantSelect" class="bg-white/20 text-white rounded-lg px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select id="contestantSelect" class="bg-white/20 text-white rounded-lg px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500">
                         <option value="">Select Contestant</option>
                     </select>
-                    <button onclick="saveScores()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Save Scores</button>
+                    <button onclick="saveScores()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Save Scores</button>
                     <button onclick="showPage('home')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Back to Home</button>
                 </div>
             </div>
@@ -143,8 +143,8 @@
                         <div class="space-y-4">
                             <div class="flex gap-2">
                                 <input type="text" id="judgeNameInput" placeholder="Judge Name (optional)" 
-                                       class="flex-1 bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-white/60">
-                                <button onclick="addJudge()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors">Add Judge</button>
+                                       class="flex-1 bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-white/60">
+                                <button onclick="addJudge()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">Add Judge</button>
                             </div>
                             <div id="judgesList" class="space-y-2">
                                 <!-- Current judges will be listed here -->
@@ -158,8 +158,8 @@
                         <div class="space-y-4">
                             <div class="flex gap-2">
                                 <input type="text" id="contestantNameInput" placeholder="Contestant Name" 
-                                       class="flex-1 bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-white/60">
-                                <button onclick="addContestant()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors">Add</button>
+                                       class="flex-1 bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-white/60">
+                                <button onclick="addContestant()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">Add</button>
                             </div>
                             <div id="contestantsList" class="space-y-2">
                                 <!-- Current contestants will be listed here -->
@@ -171,7 +171,7 @@
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-4">
                     <button onclick="calculateResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Calculate Results</button>
-                    <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Export CSV</button>
+                    <button onclick="exportToCSV()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Export CSV</button>
                     <button onclick="clearAllData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Clear All Data</button>
                     <button onclick="showPage('home')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Back to Home</button>
                 </div>
@@ -223,12 +223,66 @@
         };
 
         let currentJudge = 1;
+        let activeSessions = {}; // Track active sessions
 
         // Load configuration from localStorage or use defaults
         function loadConfig() {
             const savedConfig = localStorage.getItem('pageant_config');
             if (savedConfig) {
                 CONFIG = { ...CONFIG, ...JSON.parse(savedConfig) };
+            }
+        }
+
+        // Session management functions
+        function isPageLocked(pageType, judgeId = null) {
+            const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
+            const session = localStorage.getItem(`session_${sessionKey}`);
+            if (!session) return false;
+            
+            const sessionData = JSON.parse(session);
+            const now = Date.now();
+            
+            // Session expires after 1 hour of inactivity
+            if (now - sessionData.lastActivity > 3600000) {
+                localStorage.removeItem(`session_${sessionKey}`);
+                return false;
+            }
+            
+            return sessionData.active;
+        }
+
+        function lockPage(pageType, judgeId = null) {
+            const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
+            const sessionData = {
+                active: true,
+                lastActivity: Date.now(),
+                pageType: pageType,
+                judgeId: judgeId
+            };
+            localStorage.setItem(`session_${sessionKey}`, JSON.stringify(sessionData));
+            
+            // Update activity every 5 seconds while page is active
+            if (activeSessions[sessionKey]) {
+                clearInterval(activeSessions[sessionKey]);
+            }
+            
+            activeSessions[sessionKey] = setInterval(() => {
+                const currentSession = localStorage.getItem(`session_${sessionKey}`);
+                if (currentSession) {
+                    const data = JSON.parse(currentSession);
+                    data.lastActivity = Date.now();
+                    localStorage.setItem(`session_${sessionKey}`, JSON.stringify(data));
+                }
+            }, 5000);
+        }
+
+        function unlockPage(pageType, judgeId = null) {
+            const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
+            localStorage.removeItem(`session_${sessionKey}`);
+            
+            if (activeSessions[sessionKey]) {
+                clearInterval(activeSessions[sessionKey]);
+                delete activeSessions[sessionKey];
             }
         }
 
@@ -258,7 +312,7 @@
             CONFIG.judges.forEach(judge => {
                 const button = document.createElement('button');
                 button.onclick = () => showJudgePage(judge.id);
-                button.className = 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-colors pulse-hover';
+                button.className = 'bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors pulse-hover';
                 button.textContent = judge.name;
                 container.appendChild(button);
             });
@@ -383,10 +437,17 @@
 
         // Show specific page
         function showPage(pageType) {
+            // Unlock current page when navigating away
+            if (currentJudge) {
+                unlockPage('judge', currentJudge);
+            }
+            unlockPage('admin');
+            
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             
             if (pageType === 'home') {
                 document.getElementById('homePage').classList.remove('hidden');
+                currentJudge = null;
             } else if (pageType === 'admin') {
                 showAdminPage();
             }
@@ -394,6 +455,12 @@
 
         // Show admin page directly
         function showAdminPage() {
+            if (isPageLocked('admin')) {
+                alert('Admin panel is currently being used by another user. Please try again later.');
+                return;
+            }
+            
+            lockPage('admin');
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             document.getElementById('adminPage').classList.remove('hidden');
             updateJudgesList();
@@ -403,6 +470,13 @@
 
         // Show judge scoring page
         function showJudgePage(judgeId) {
+            if (isPageLocked('judge', judgeId)) {
+                const judge = CONFIG.judges.find(j => j.id === judgeId);
+                alert(`${judge.name}'s scoring panel is currently being used. Please try again later.`);
+                return;
+            }
+            
+            lockPage('judge', judgeId);
             currentJudge = judgeId;
             const judge = CONFIG.judges.find(j => j.id === judgeId);
             document.getElementById('judgeTitle').textContent = `${judge.name} - Scoring Panel`;
@@ -440,7 +514,7 @@
                             <label class="block text-white text-sm font-medium mb-2">${subcategory}</label>
                             <input type="number" 
                                    min="0" max="10" step="0.1"
-                                   class="w-full bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                   class="w-full bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                    data-category="${category}" 
                                    data-subcategory="${subcategory}"
                                    placeholder="0-10">
@@ -453,7 +527,7 @@
                     ${subcategoryInputs}
                     <div class="mt-4 p-3 bg-white/10 rounded-lg">
                         <span class="text-white font-medium">Category Total: </span>
-                        <span id="total-${category.replace(/\s+/g, '')}" class="text-emerald-300 font-bold">0.0</span>
+                        <span id="total-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold">0.0</span>
                     </div>
                 `;
 
@@ -600,7 +674,7 @@
                 row.innerHTML = `
                     <td class="py-3 px-4 ${rankClass}">${rankDisplay}</td>
                     <td class="py-3 px-4 font-medium">${result.contestant}</td>
-                    <td class="py-3 px-4 font-bold text-emerald-400">${result.totalScore.toFixed(1)}</td>
+                    <td class="py-3 px-4 font-bold text-purple-400">${result.totalScore.toFixed(1)}</td>
                     <td class="py-3 px-4">${result.averageScore.toFixed(1)}</td>
                     <td class="py-3 px-4">
                         <button onclick="showDetails('${result.contestant}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
@@ -728,6 +802,14 @@
 
         // Initialize the app when page loads
         document.addEventListener('DOMContentLoaded', initApp);
+
+        // Clean up sessions when page is closed or refreshed
+        window.addEventListener('beforeunload', function() {
+            if (currentJudge) {
+                unlockPage('judge', currentJudge);
+            }
+            unlockPage('admin');
+        });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972ef15cc4a6ce77',t:'MTc1NTgyOTc3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f236da75cce0e',t:'MTc1NTgzMTgyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
