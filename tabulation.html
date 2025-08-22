@@ -968,25 +968,77 @@
             // since we now show all contestants at once
         }
 
-        // Generate scoring form for current judge - now shows all contestants
+        // Generate scoring form for current judge - compact layout with navigation
         function generateScoringForm() {
             const grid = document.getElementById('contestantsGrid');
             grid.innerHTML = '';
 
+            // Create navigation tabs for contestants
+            const navContainer = document.createElement('div');
+            navContainer.className = 'bg-white/10 backdrop-blur-md rounded-xl p-4 mb-6 sticky top-0 z-10';
+            navContainer.innerHTML = `
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="showAllContestants()" id="showAllBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+                        📋 Show All
+                    </button>
+                    <button onclick="showCompactView()" id="compactViewBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+                        📊 Compact View
+                    </button>
+                    <div class="flex-1"></div>
+                    <div class="text-white text-sm">
+                        <span id="progressIndicator">0/${CONFIG.contestants.length} completed</span>
+                    </div>
+                </div>
+                <div id="contestantTabs" class="flex flex-wrap gap-2">
+                    ${CONFIG.contestants.map((contestant, index) => `
+                        <button onclick="showContestant('${contestant}')" 
+                                id="tab-${contestant.replace(/\s+/g, '')}"
+                                class="contestant-tab bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors text-sm font-medium border border-white/20">
+                            ${contestant}
+                            <span id="status-${contestant.replace(/\s+/g, '')}" class="ml-1 text-xs">⚪</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            grid.appendChild(navContainer);
+
+            // Create main content area
+            const contentArea = document.createElement('div');
+            contentArea.id = 'scoringContent';
+            contentArea.className = 'space-y-6';
+            grid.appendChild(contentArea);
+
+            // Show compact view by default
+            showCompactView();
+            
+            // Load existing scores for all contestants
+            loadAllExistingScores();
+        }
+
+        // Show all contestants in individual cards
+        function showAllContestants() {
+            const content = document.getElementById('scoringContent');
+            content.innerHTML = '';
+
+            // Update active button
+            document.getElementById('showAllBtn').className = 'bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+            document.getElementById('compactViewBtn').className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+
             CONFIG.contestants.forEach(contestant => {
                 const contestantCard = document.createElement('div');
-                contestantCard.className = 'bg-white/10 backdrop-blur-md rounded-xl p-8 card-hover';
+                contestantCard.className = 'bg-white/10 backdrop-blur-md rounded-xl p-6 card-hover';
+                contestantCard.id = `card-${contestant.replace(/\s+/g, '')}`;
                 
                 let categoriesHTML = '';
                 Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
                     let subcategoryInputs = '';
                     subcategories.forEach(subcategory => {
                         subcategoryInputs += `
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <label class="block text-white text-xs font-medium mb-1">${subcategory}</label>
                                 <input type="number" 
                                        min="0" max="10" step="0.1"
-                                       class="w-full bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                                       class="w-full bg-white/20 text-white rounded-lg px-2 py-1 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
                                        data-contestant="${contestant}"
                                        data-category="${category}" 
                                        data-subcategory="${subcategory}"
@@ -996,40 +1048,203 @@
                     });
 
                     categoriesHTML += `
-                        <div class="bg-white/10 rounded-lg p-4 mb-4">
-                            <h4 class="text-lg font-bold text-white mb-3 border-b border-white/20 pb-2">${category}</h4>
-                            <div class="grid grid-cols-1 gap-2">
+                        <div class="bg-white/10 rounded-lg p-3 mb-3">
+                            <h4 class="text-sm font-bold text-white mb-2 border-b border-white/20 pb-1">${category}</h4>
+                            <div class="grid grid-cols-2 gap-2">
                                 ${subcategoryInputs}
                             </div>
-                            <div class="mt-3 p-2 bg-white/10 rounded-lg">
-                                <span class="text-white font-medium text-sm">Category Total: </span>
-                                <span id="total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold">0.0</span>
+                            <div class="mt-2 p-2 bg-white/10 rounded-lg text-center">
+                                <span class="text-white font-medium text-xs">Total: </span>
+                                <span id="total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold text-sm">0.0</span>
                             </div>
                         </div>
                     `;
                 });
 
                 contestantCard.innerHTML = `
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-white bg-purple-600/30 rounded-lg py-3 px-4 border-2 border-purple-400">${contestant}</h3>
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-bold text-white bg-purple-600/30 rounded-lg py-2 px-3 border-2 border-purple-400">${contestant}</h3>
                         <div class="mt-2 p-2 bg-white/10 rounded-lg">
-                            <span class="text-white font-medium">Grand Total: </span>
+                            <span class="text-white font-medium text-sm">Grand Total: </span>
                             <span id="grandtotal-${contestant.replace(/\s+/g, '')}" class="text-yellow-300 font-bold text-lg">0.0</span>
                         </div>
                     </div>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         ${categoriesHTML}
                     </div>
                 `;
 
-                grid.appendChild(contestantCard);
+                content.appendChild(contestantCard);
             });
 
             // Add event listeners for real-time calculation
-            grid.addEventListener('input', calculateAllTotals);
-            
-            // Load existing scores for all contestants
+            content.addEventListener('input', calculateAllTotals);
             loadAllExistingScores();
+        }
+
+        // Show compact table view
+        function showCompactView() {
+            const content = document.getElementById('scoringContent');
+            
+            // Update active button
+            document.getElementById('showAllBtn').className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+            document.getElementById('compactViewBtn').className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+
+            let tableHTML = `
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-4">
+                    <h3 class="text-xl font-bold text-white mb-4 text-center">Quick Scoring Table</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white text-sm">
+                            <thead>
+                                <tr class="border-b border-white/20">
+                                    <th class="text-left py-2 px-2 font-bold sticky left-0 bg-purple-600/50">Contestant</th>
+            `;
+
+            // Add category headers
+            Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                subcategories.forEach(subcategory => {
+                    tableHTML += `<th class="text-center py-2 px-1 font-medium text-xs">${category}<br><span class="text-xs text-white/70">${subcategory}</span></th>`;
+                });
+                tableHTML += `<th class="text-center py-2 px-2 font-bold bg-purple-600/30">${category}<br>Total</th>`;
+            });
+
+            tableHTML += `<th class="text-center py-2 px-2 font-bold bg-yellow-600/30">Grand<br>Total</th></tr></thead><tbody>`;
+
+            // Add contestant rows
+            CONFIG.contestants.forEach(contestant => {
+                tableHTML += `
+                    <tr class="border-b border-white/10 hover:bg-white/5">
+                        <td class="py-2 px-2 font-medium sticky left-0 bg-purple-600/20">${contestant}</td>
+                `;
+
+                Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                    subcategories.forEach(subcategory => {
+                        tableHTML += `
+                            <td class="py-1 px-1">
+                                <input type="number" 
+                                       min="0" max="10" step="0.1"
+                                       class="w-16 bg-white/20 text-white rounded px-1 py-1 border border-white/30 focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs text-center"
+                                       data-contestant="${contestant}"
+                                       data-category="${category}" 
+                                       data-subcategory="${subcategory}"
+                                       placeholder="0">
+                            </td>
+                        `;
+                    });
+                    tableHTML += `
+                        <td class="py-1 px-2 text-center bg-purple-600/20">
+                            <span id="total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold text-sm">0.0</span>
+                        </td>
+                    `;
+                });
+
+                tableHTML += `
+                        <td class="py-1 px-2 text-center bg-yellow-600/20">
+                            <span id="grandtotal-${contestant.replace(/\s+/g, '')}" class="text-yellow-300 font-bold">0.0</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table></div></div>`;
+
+            content.innerHTML = tableHTML;
+
+            // Add event listeners for real-time calculation
+            content.addEventListener('input', calculateAllTotals);
+            loadAllExistingScores();
+        }
+
+        // Show individual contestant
+        function showContestant(contestant) {
+            const content = document.getElementById('scoringContent');
+            
+            // Update tab states
+            document.querySelectorAll('.contestant-tab').forEach(tab => {
+                tab.className = 'contestant-tab bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors text-sm font-medium border border-white/20';
+            });
+            document.getElementById(`tab-${contestant.replace(/\s+/g, '')}`).className = 'contestant-tab bg-purple-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-medium border border-purple-400';
+
+            // Update active buttons
+            document.getElementById('showAllBtn').className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+            document.getElementById('compactViewBtn').className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium';
+
+            let categoriesHTML = '';
+            Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                let subcategoryInputs = '';
+                subcategories.forEach(subcategory => {
+                    subcategoryInputs += `
+                        <div class="mb-4">
+                            <label class="block text-white text-sm font-medium mb-2">${subcategory}</label>
+                            <input type="number" 
+                                   min="0" max="10" step="0.1"
+                                   class="w-full bg-white/20 text-white rounded-lg px-4 py-3 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg text-center"
+                                   data-contestant="${contestant}"
+                                   data-category="${category}" 
+                                   data-subcategory="${subcategory}"
+                                   placeholder="0-10">
+                        </div>
+                    `;
+                });
+
+                categoriesHTML += `
+                    <div class="bg-white/10 rounded-xl p-6 mb-6">
+                        <h4 class="text-2xl font-bold text-white mb-4 border-b border-white/20 pb-3 text-center">${category}</h4>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${subcategoryInputs}
+                        </div>
+                        <div class="mt-4 p-4 bg-white/10 rounded-lg text-center">
+                            <span class="text-white font-medium text-lg">Category Total: </span>
+                            <span id="total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold text-2xl">0.0</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = `
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-8">
+                    <div class="text-center mb-8">
+                        <h3 class="text-4xl font-bold text-white bg-purple-600/30 rounded-xl py-4 px-6 border-2 border-purple-400 inline-block">${contestant}</h3>
+                        <div class="mt-4 p-4 bg-white/10 rounded-xl">
+                            <span class="text-white font-medium text-xl">Grand Total: </span>
+                            <span id="grandtotal-${contestant.replace(/\s+/g, '')}" class="text-yellow-300 font-bold text-3xl">0.0</span>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        ${categoriesHTML}
+                    </div>
+                    <div class="text-center mt-8">
+                        <button onclick="saveContestantScores('${contestant}')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                            💾 Save ${contestant}'s Scores
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners for real-time calculation
+            content.addEventListener('input', calculateAllTotals);
+            loadAllExistingScores();
+        }
+
+        // Save individual contestant scores
+        function saveContestantScores(contestant) {
+            const scores = {};
+            Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                scores[category] = {};
+                subcategories.forEach(subcategory => {
+                    const input = document.querySelector(`input[data-contestant="${contestant}"][data-category="${category}"][data-subcategory="${subcategory}"]`);
+                    scores[category][subcategory] = parseFloat(input.value) || 0;
+                });
+            });
+
+            // Save to local storage
+            const storageKey = `judge${currentJudge}_${contestant}`;
+            localStorage.setItem(storageKey, JSON.stringify(scores));
+            
+            // Update progress
+            updateProgress();
+            
+            alert(`✅ Scores saved successfully for ${contestant}!`);
         }
 
         // Calculate all totals in real-time for all contestants
@@ -1079,6 +1294,9 @@
                 savedCount++;
             });
             
+            // Update progress after saving
+            updateProgress();
+            
             alert(`✅ All scores saved successfully for ${savedCount} contestants!`);
         }
 
@@ -1103,6 +1321,43 @@
             
             // Calculate all totals after loading
             calculateAllTotals();
+            updateProgress();
+        }
+
+        // Update progress indicator and tab status
+        function updateProgress() {
+            let completedCount = 0;
+            
+            CONFIG.contestants.forEach(contestant => {
+                const storageKey = `judge${currentJudge}_${contestant}`;
+                const savedScores = localStorage.getItem(storageKey);
+                const statusElement = document.getElementById(`status-${contestant.replace(/\s+/g, '')}`);
+                
+                if (savedScores) {
+                    const scores = JSON.parse(savedScores);
+                    // Check if contestant has any scores
+                    let hasScores = false;
+                    Object.values(scores).forEach(categoryScores => {
+                        Object.values(categoryScores).forEach(score => {
+                            if (score > 0) hasScores = true;
+                        });
+                    });
+                    
+                    if (hasScores) {
+                        completedCount++;
+                        if (statusElement) statusElement.textContent = '✅';
+                    } else {
+                        if (statusElement) statusElement.textContent = '⚪';
+                    }
+                } else {
+                    if (statusElement) statusElement.textContent = '⚪';
+                }
+            });
+            
+            const progressElement = document.getElementById('progressIndicator');
+            if (progressElement) {
+                progressElement.textContent = `${completedCount}/${CONFIG.contestants.length} completed`;
+            }
         }
 
         // Export individual judge scoresheet
@@ -1881,5 +2136,5 @@
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97305c400247eb9d',t:'MTc1NTg0NDYzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97306d316544fd15',t:'MTc1NTg0NTMyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
