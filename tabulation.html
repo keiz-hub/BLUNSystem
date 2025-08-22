@@ -245,8 +245,11 @@
     </div>
 
     <script>
-        // Enhanced session management with unique browser session IDs
-        const BROWSER_SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        // Enhanced cross-device session management
+        const DEVICE_ID = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const SESSION_HEARTBEAT_INTERVAL = 2000; // 2 seconds
+        const SESSION_TIMEOUT = 10000; // 10 seconds timeout
+        const GLOBAL_SESSION_KEY = 'pageant_global_sessions';
         
         // Configuration - Now dynamically managed
         let CONFIG = {
@@ -270,103 +273,143 @@
         };
 
         let currentJudge = 1;
-        let activeSessions = {}; // Track active sessions
-        let sessionCheckInterval = null;
+        let currentPageType = null;
+        let heartbeatInterval = null;
+        let sessionMonitorInterval = null;
+
+        // Cross-device session management functions
+        function getGlobalSessions() {
+            const sessions = localStorage.getItem(GLOBAL_SESSION_KEY);
+            return sessions ? JSON.parse(sessions) : {};
+        }
+
+        function setGlobalSessions(sessions) {
+            localStorage.setItem(GLOBAL_SESSION_KEY, JSON.stringify(sessions));
+        }
+
+        function cleanExpiredSessions() {
+            const sessions = getGlobalSessions();
+            const now = Date.now();
+            let changed = false;
+            
+            Object.keys(sessions).forEach(sessionKey => {
+                if (now - sessions[sessionKey].lastHeartbeat > SESSION_TIMEOUT) {
+                    delete sessions[sessionKey];
+                    changed = true;
+                }
+            });
+            
+            if (changed) {
+                setGlobalSessions(sessions);
+            }
+        }
 
         function isPageLocked(pageType, judgeId = null) {
+            cleanExpiredSessions();
+            const sessions = getGlobalSessions();
             const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
-            const session = localStorage.getItem(`lock_${sessionKey}`);
+            
+            const session = sessions[sessionKey];
             if (!session) return false;
             
-            const sessionData = JSON.parse(session);
-            const now = Date.now();
-            
-            // Session expires after 1 hour of inactivity
-            if (now - sessionData.lastActivity > 3600000) {
-                localStorage.removeItem(`lock_${sessionKey}`);
-                return false;
-            }
-            
-            // Check if it's locked by a different browser session
-            return sessionData.active && sessionData.browserSessionId !== BROWSER_SESSION_ID;
+            // Check if it's locked by a different device
+            return session.deviceId !== DEVICE_ID;
         }
 
         function lockPage(pageType, judgeId = null) {
+            cleanExpiredSessions();
+            const sessions = getGlobalSessions();
             const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
             
             // Double-check if someone else just locked it
-            if (isPageLocked(pageType, judgeId)) {
+            if (sessions[sessionKey] && sessions[sessionKey].deviceId !== DEVICE_ID) {
                 return false;
             }
             
-            const sessionData = {
-                active: true,
-                lastActivity: Date.now(),
+            // Lock the page for this device
+            sessions[sessionKey] = {
+                deviceId: DEVICE_ID,
                 pageType: pageType,
                 judgeId: judgeId,
-                browserSessionId: BROWSER_SESSION_ID,
-                timestamp: Date.now(),
-                userAgent: navigator.userAgent.substring(0, 50)
+                lastHeartbeat: Date.now(),
+                userAgent: navigator.userAgent.substring(0, 50),
+                timestamp: Date.now()
             };
-            localStorage.setItem(`lock_${sessionKey}`, JSON.stringify(sessionData));
             
-            // Update activity every 3 seconds while page is active
-            if (activeSessions[sessionKey]) {
-                clearInterval(activeSessions[sessionKey]);
-            }
+            setGlobalSessions(sessions);
             
-            activeSessions[sessionKey] = setInterval(() => {
-                const currentSession = localStorage.getItem(`lock_${sessionKey}`);
-                if (currentSession) {
-                    const data = JSON.parse(currentSession);
-                    // Only update if this is our session
-                    if (data.browserSessionId === BROWSER_SESSION_ID) {
-                        data.lastActivity = Date.now();
-                        localStorage.setItem(`lock_${sessionKey}`, JSON.stringify(data));
-                    } else {
-                        // Someone else took over, show lock overlay
-                        showLockOverlay(pageType, judgeId);
-                        clearInterval(activeSessions[sessionKey]);
-                        delete activeSessions[sessionKey];
-                    }
-                }
-            }, 3000);
+            // Start heartbeat to maintain the lock
+            startHeartbeat(sessionKey);
             
             return true;
         }
 
         function unlockPage(pageType, judgeId = null) {
+            const sessions = getGlobalSessions();
             const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
-            const session = localStorage.getItem(`lock_${sessionKey}`);
             
-            if (session) {
-                const sessionData = JSON.parse(session);
-                // Only unlock if this is our session
-                if (sessionData.browserSessionId === BROWSER_SESSION_ID) {
-                    localStorage.removeItem(`lock_${sessionKey}`);
-                }
+            // Only unlock if this is our session
+            if (sessions[sessionKey] && sessions[sessionKey].deviceId === DEVICE_ID) {
+                delete sessions[sessionKey];
+                setGlobalSessions(sessions);
             }
             
-            if (activeSessions[sessionKey]) {
-                clearInterval(activeSessions[sessionKey]);
-                delete activeSessions[sessionKey];
-            }
+            stopHeartbeat();
         }
 
         function forceUnlockPage(pageType, judgeId = null) {
+            const sessions = getGlobalSessions();
             const sessionKey = pageType === 'admin' ? 'admin' : `judge_${judgeId}`;
-            localStorage.removeItem(`lock_${sessionKey}`);
+            delete sessions[sessionKey];
+            setGlobalSessions(sessions);
+        }
+
+        function startHeartbeat(sessionKey) {
+            stopHeartbeat(); // Clear any existing heartbeat
+            
+            heartbeatInterval = setInterval(() => {
+                const sessions = getGlobalSessions();
+                if (sessions[sessionKey] && sessions[sessionKey].deviceId === DEVICE_ID) {
+                    sessions[sessionKey].lastHeartbeat = Date.now();
+                    setGlobalSessions(sessions);
+                } else {
+                    // Session was taken over by another device
+                    stopHeartbeat();
+                    showLockOverlay(currentPageType, currentJudge);
+                }
+            }, SESSION_HEARTBEAT_INTERVAL);
+        }
+
+        function stopHeartbeat() {
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+
+        function startSessionMonitor() {
+            sessionMonitorInterval = setInterval(() => {
+                cleanExpiredSessions();
+                updateSessionStatus();
+                
+                // Check if our current session was taken over
+                if (currentPageType && currentPageType !== 'home') {
+                    const sessionKey = currentPageType === 'admin' ? 'admin' : `judge_${currentJudge}`;
+                    const sessions = getGlobalSessions();
+                    
+                    if (sessions[sessionKey] && sessions[sessionKey].deviceId !== DEVICE_ID) {
+                        // Our session was taken over
+                        stopHeartbeat();
+                        showLockOverlay(currentPageType, currentJudge);
+                    }
+                }
+            }, 3000);
         }
 
         function forceUnlockAll() {
             if (confirm('Force unlock all sessions? This will kick out all active users.')) {
-                // Unlock admin
-                localStorage.removeItem('lock_admin');
-                
-                // Unlock all judges
-                CONFIG.judges.forEach(judge => {
-                    localStorage.removeItem(`lock_judge_${judge.id}`);
-                });
+                // Clear all global sessions
+                setGlobalSessions({});
                 
                 alert('All sessions have been forcefully unlocked.');
                 updateSessionStatus();
@@ -397,27 +440,28 @@
         }
 
         function viewActiveSessions() {
+            cleanExpiredSessions();
+            const sessions = getGlobalSessions();
             let sessionInfo = 'Active Sessions:\n\n';
             
             // Check admin session
-            const adminSession = localStorage.getItem('lock_admin');
-            if (adminSession) {
-                const data = JSON.parse(adminSession);
-                const timeAgo = Math.floor((Date.now() - data.lastActivity) / 1000 / 60);
-                sessionInfo += `Admin Panel: Active (${timeAgo} min ago)\n`;
+            if (sessions.admin) {
+                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000);
+                const isOurs = sessions.admin.deviceId === DEVICE_ID;
+                sessionInfo += `Admin Panel: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}s ago)\n`;
             }
             
             // Check judge sessions
             CONFIG.judges.forEach(judge => {
-                const session = localStorage.getItem(`lock_judge_${judge.id}`);
-                if (session) {
-                    const data = JSON.parse(session);
-                    const timeAgo = Math.floor((Date.now() - data.lastActivity) / 1000 / 60);
-                    sessionInfo += `${judge.name}: Active (${timeAgo} min ago)\n`;
+                const sessionKey = `judge_${judge.id}`;
+                if (sessions[sessionKey]) {
+                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000);
+                    const isOurs = sessions[sessionKey].deviceId === DEVICE_ID;
+                    sessionInfo += `${judge.name}: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}s ago)\n`;
                 }
             });
             
-            if (sessionInfo === 'Active Sessions:\n\n') {
+            if (Object.keys(sessions).length === 0) {
                 sessionInfo += 'No active sessions found.';
             }
             
@@ -425,25 +469,25 @@
         }
 
         function updateSessionStatus() {
+            cleanExpiredSessions();
+            const sessions = getGlobalSessions();
             const statusContainer = document.getElementById('sessionStatus');
             const indicator = document.getElementById('sessionIndicator');
             
             if (!statusContainer) return;
             
             statusContainer.innerHTML = '';
-            indicator.textContent = `Session: ${BROWSER_SESSION_ID.substring(0, 12)}...`;
+            indicator.textContent = `Device: ${DEVICE_ID.substring(0, 12)}...`;
             
             // Admin status
             const adminDiv = document.createElement('div');
-            const adminSession = localStorage.getItem('lock_admin');
-            if (adminSession) {
-                const data = JSON.parse(adminSession);
-                const isOurs = data.browserSessionId === BROWSER_SESSION_ID;
-                const timeAgo = Math.floor((Date.now() - data.lastActivity) / 1000 / 60);
+            if (sessions.admin) {
+                const isOurs = sessions.admin.deviceId === DEVICE_ID;
+                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000);
                 adminDiv.innerHTML = `
                     <div class="flex items-center justify-between p-2 rounded ${isOurs ? 'bg-green-600/20' : 'bg-red-600/20'}">
                         <span class="text-white">Admin Panel</span>
-                        <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your session' : `Locked (${timeAgo}m ago)`}</span>
+                        <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}s ago)`}</span>
                     </div>
                 `;
             } else {
@@ -460,15 +504,14 @@
             const judgeDiv = document.createElement('div');
             judgeDiv.innerHTML = '<div class="space-y-1">';
             CONFIG.judges.forEach(judge => {
-                const session = localStorage.getItem(`lock_judge_${judge.id}`);
-                if (session) {
-                    const data = JSON.parse(session);
-                    const isOurs = data.browserSessionId === BROWSER_SESSION_ID;
-                    const timeAgo = Math.floor((Date.now() - data.lastActivity) / 1000 / 60);
+                const sessionKey = `judge_${judge.id}`;
+                if (sessions[sessionKey]) {
+                    const isOurs = sessions[sessionKey].deviceId === DEVICE_ID;
+                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000);
                     judgeDiv.innerHTML += `
                         <div class="flex items-center justify-between p-2 rounded ${isOurs ? 'bg-green-600/20' : 'bg-red-600/20'}">
                             <span class="text-white">${judge.name}</span>
-                            <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your session' : `Locked (${timeAgo}m ago)`}</span>
+                            <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}s ago)`}</span>
                         </div>
                     `;
                 } else {
@@ -510,8 +553,8 @@
             updateSessionStatus();
             showPage('home');
             
-            // Update session status every 10 seconds
-            setInterval(updateSessionStatus, 10000);
+            // Start session monitoring
+            startSessionMonitor();
         }
 
         // Update judge buttons on home page
@@ -653,16 +696,18 @@
         // Show specific page
         function showPage(pageType) {
             // Unlock current page when navigating away
-            if (currentJudge) {
+            if (currentPageType === 'admin') {
+                unlockPage('admin');
+            } else if (currentPageType === 'judge' && currentJudge) {
                 unlockPage('judge', currentJudge);
             }
-            unlockPage('admin');
             
             hideLockOverlay();
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             
             if (pageType === 'home') {
                 document.getElementById('homePage').classList.remove('hidden');
+                currentPageType = 'home';
                 currentJudge = null;
                 updateSessionStatus();
             } else if (pageType === 'admin') {
@@ -683,6 +728,7 @@
             }
             
             hideLockOverlay();
+            currentPageType = 'admin';
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             document.getElementById('adminPage').classList.remove('hidden');
             updateJudgesList();
@@ -703,6 +749,7 @@
             }
             
             hideLockOverlay();
+            currentPageType = 'judge';
             currentJudge = judgeId;
             const judge = CONFIG.judges.find(j => j.id === judgeId);
             document.getElementById('judgeTitle').textContent = `${judge.name} - Scoring Panel`;
@@ -718,12 +765,12 @@
 
         function updateTimeRemaining() {
             const timeSpan = document.getElementById('timeRemaining');
-            if (timeSpan && currentJudge) {
-                const sessionKey = `lock_judge_${currentJudge}`;
-                const session = localStorage.getItem(sessionKey);
-                if (session) {
-                    const data = JSON.parse(session);
-                    const minutesLeft = Math.floor((3600000 - (Date.now() - data.lastActivity)) / 1000 / 60);
+            if (timeSpan && currentPageType === 'judge' && currentJudge) {
+                const sessions = getGlobalSessions();
+                const sessionKey = `judge_${currentJudge}`;
+                if (sessions[sessionKey] && sessions[sessionKey].deviceId === DEVICE_ID) {
+                    const secondsLeft = Math.floor((SESSION_TIMEOUT - (Date.now() - sessions[sessionKey].lastHeartbeat)) / 1000);
+                    const minutesLeft = Math.floor(secondsLeft / 60);
                     timeSpan.textContent = Math.max(0, minutesLeft);
                 }
             }
@@ -1051,14 +1098,20 @@
 
         // Clean up sessions when page is closed or refreshed
         window.addEventListener('beforeunload', function() {
-            if (currentJudge) {
+            if (currentPageType === 'admin') {
+                unlockPage('admin');
+            } else if (currentPageType === 'judge' && currentJudge) {
                 unlockPage('judge', currentJudge);
             }
-            unlockPage('admin');
+            
+            stopHeartbeat();
+            if (sessionMonitorInterval) {
+                clearInterval(sessionMonitorInterval);
+            }
         });
 
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f3e379182a3e6',t:'MTc1NTgzMjkxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f78aec50ece2b',t:'MTc1NTgzNTMxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
