@@ -229,9 +229,75 @@
                 </div>
             </div>
             
+            <!-- Winner Announcement -->
+            <div id="winnerAnnouncement" class="bg-gradient-to-r from-yellow-600/20 to-purple-600/20 backdrop-blur-md rounded-xl p-8 mb-8 border-2 border-yellow-400/50 hidden">
+                <div class="text-center">
+                    <h2 class="text-4xl font-bold text-yellow-400 mb-4">🏆 WINNER ANNOUNCED! 🏆</h2>
+                    <div id="winnerDetails" class="text-2xl text-white mb-6">
+                        <!-- Winner details will be shown here -->
+                    </div>
+                    <div id="topThree" class="grid md:grid-cols-3 gap-6 mt-8">
+                        <!-- Top 3 will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import/Export Section -->
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8">
+                <h3 class="text-2xl font-bold text-white mb-6">📊 Import & Export Data</h3>
+                
+                <!-- Import Section -->
+                <div class="grid md:grid-cols-2 gap-8 mb-6">
+                    <div class="bg-white/10 rounded-lg p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">📥 Import Scoresheet</h4>
+                        <p class="text-white/80 text-sm mb-4">Import CSV files from other devices or backup scoresheets:</p>
+                        <div class="space-y-3">
+                            <input type="file" id="csvFileInput" accept=".csv" 
+                                   class="block w-full text-sm text-white bg-white/20 border border-white/30 rounded-lg cursor-pointer focus:outline-none">
+                            <button onclick="importCSV()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors w-full">
+                                Import CSV Data
+                            </button>
+                        </div>
+                        <div class="mt-4 text-xs text-white/60">
+                            <p>• Supports individual judge scoresheets</p>
+                            <p>• Automatically merges with existing data</p>
+                            <p>• Validates data format before import</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/10 rounded-lg p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">📤 Export Options</h4>
+                        <div class="space-y-3">
+                            <button onclick="exportMasterScoresheet()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors w-full">
+                                📋 Master Scoresheet (All Data)
+                            </button>
+                            <button onclick="exportFinalResults()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors w-full">
+                                🏆 Final Results Summary
+                            </button>
+                            <button onclick="exportCategoryBreakdown()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors w-full">
+                                📊 Category Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Status -->
+                <div class="bg-white/10 rounded-lg p-4">
+                    <h4 class="text-white font-bold mb-2">📈 Current Data Status</h4>
+                    <div id="dataStatus" class="grid md:grid-cols-3 gap-4 text-sm">
+                        <!-- Data status will be shown here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Results Table -->
             <div class="bg-white/10 backdrop-blur-md rounded-xl p-8">
-                <h3 class="text-2xl font-bold text-white mb-6">Final Rankings</h3>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-white">Final Rankings</h3>
+                    <button onclick="announceWinner()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                        🏆 Announce Winner
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table id="resultsTable" class="w-full text-white">
                         <thead>
@@ -240,6 +306,7 @@
                                 <th class="text-left py-3 px-4">Contestant</th>
                                 <th class="text-left py-3 px-4">Total Score</th>
                                 <th class="text-left py-3 px-4">Average</th>
+                                <th class="text-left py-3 px-4">Category Averages</th>
                                 <th class="text-left py-3 px-4">Details</th>
                             </tr>
                         </thead>
@@ -1112,11 +1179,11 @@
             CONFIG.contestants.forEach(contestant => {
                 let totalScore = 0;
                 let judgeCount = 0;
-                const categoryTotals = {};
+                const categoryAverages = {};
 
-                // Initialize category totals
+                // Initialize category averages
                 Object.keys(CONFIG.categories).forEach(category => {
-                    categoryTotals[category] = 0;
+                    categoryAverages[category] = 0;
                 });
 
                 // Collect scores from all judges
@@ -1130,19 +1197,24 @@
                         Object.entries(scores).forEach(([category, subcategoryScores]) => {
                             const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
                             const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
-                            categoryTotals[category] += categoryAverage;
+                            categoryAverages[category] += categoryAverage;
                             totalScore += categoryAverage;
                         });
                     }
                 });
 
                 if (judgeCount > 0) {
+                    // Calculate final category averages across all judges
+                    Object.keys(categoryAverages).forEach(category => {
+                        categoryAverages[category] = categoryAverages[category] / judgeCount;
+                    });
+
                     results.push({
                         contestant,
                         totalScore,
                         averageScore: totalScore / judgeCount,
                         judgeCount,
-                        categoryTotals
+                        categoryAverages
                     });
                 }
             });
@@ -1177,11 +1249,21 @@
                     rankDisplay = '🥉 3rd';
                 }
 
+                // Create category averages display
+                let categoryAveragesHTML = '<div class="text-xs space-y-1">';
+                Object.keys(CONFIG.categories).forEach(category => {
+                    if (result.categoryAverages && result.categoryAverages[category]) {
+                        categoryAveragesHTML += `<div><span class="text-white/60">${category}:</span> <span class="text-white">${result.categoryAverages[category].toFixed(1)}</span></div>`;
+                    }
+                });
+                categoryAveragesHTML += '</div>';
+
                 row.innerHTML = `
                     <td class="py-3 px-4 ${rankClass}">${rankDisplay}</td>
                     <td class="py-3 px-4 font-medium">${result.contestant}</td>
                     <td class="py-3 px-4 font-bold text-purple-400">${result.totalScore.toFixed(1)}</td>
                     <td class="py-3 px-4">${result.averageScore.toFixed(1)}</td>
+                    <td class="py-3 px-4">${categoryAveragesHTML}</td>
                     <td class="py-3 px-4">
                         <button onclick="showDetails('${result.contestant}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
                             View Details
@@ -1190,6 +1272,478 @@
                 `;
                 tbody.appendChild(row);
             });
+            
+            // Update data status
+            updateDataStatus();
+        }
+
+        // Announce winner with celebration
+        function announceWinner() {
+            calculateResults();
+            
+            // Get current results
+            const results = [];
+            CONFIG.contestants.forEach(contestant => {
+                let totalScore = 0;
+                let judgeCount = 0;
+                const categoryAverages = {};
+
+                Object.keys(CONFIG.categories).forEach(category => {
+                    categoryAverages[category] = 0;
+                });
+
+                CONFIG.judges.forEach(judge => {
+                    const storageKey = `judge${judge.id}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    
+                    if (savedScores) {
+                        judgeCount++;
+                        const scores = JSON.parse(savedScores);
+                        Object.entries(scores).forEach(([category, subcategoryScores]) => {
+                            const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
+                            const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
+                            categoryAverages[category] += categoryAverage;
+                            totalScore += categoryAverage;
+                        });
+                    }
+                });
+
+                if (judgeCount > 0) {
+                    // Calculate final category averages across all judges
+                    Object.keys(categoryAverages).forEach(category => {
+                        categoryAverages[category] = categoryAverages[category] / judgeCount;
+                    });
+
+                    results.push({
+                        contestant,
+                        totalScore,
+                        averageScore: totalScore / judgeCount,
+                        judgeCount,
+                        categoryAverages
+                    });
+                }
+            });
+
+            results.sort((a, b) => b.totalScore - a.totalScore);
+
+            if (results.length === 0) {
+                alert('No scores available to announce a winner!');
+                return;
+            }
+
+            // Show winner announcement
+            const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+            const winnerDetails = document.getElementById('winnerDetails');
+            const topThree = document.getElementById('topThree');
+
+            const winner = results[0];
+            winnerDetails.innerHTML = `
+                <div class="mb-4">
+                    <div class="text-5xl font-bold text-yellow-400 mb-2">${winner.contestant}</div>
+                    <div class="text-xl text-white/90">Final Score: ${winner.totalScore.toFixed(1)} (Average: ${winner.averageScore.toFixed(1)})</div>
+                </div>
+            `;
+
+            // Show top 3
+            topThree.innerHTML = '';
+            const podiumPositions = ['🥇 WINNER', '🥈 RUNNER-UP', '🥉 SECOND RUNNER-UP'];
+            const podiumColors = ['text-yellow-400', 'text-gray-300', 'text-yellow-600'];
+            
+            results.slice(0, 3).forEach((result, index) => {
+                const podiumCard = document.createElement('div');
+                podiumCard.className = `bg-white/10 rounded-lg p-6 text-center ${index === 0 ? 'transform scale-110 border-2 border-yellow-400' : ''}`;
+                podiumCard.innerHTML = `
+                    <div class="${podiumColors[index]} text-2xl font-bold mb-2">${podiumPositions[index]}</div>
+                    <div class="text-white text-xl font-bold mb-2">${result.contestant}</div>
+                    <div class="text-white/80 text-lg">Score: ${result.totalScore.toFixed(1)}</div>
+                    <div class="text-white/60 text-sm">Average: ${result.averageScore.toFixed(1)}</div>
+                `;
+                topThree.appendChild(podiumCard);
+            });
+
+            winnerAnnouncement.classList.remove('hidden');
+            winnerAnnouncement.scrollIntoView({ behavior: 'smooth' });
+
+            // Celebration alert
+            setTimeout(() => {
+                alert(`🎉 CONGRATULATIONS TO ${winner.contestant}! 🎉\n\nFinal Score: ${winner.totalScore.toFixed(1)}\nAverage Score: ${winner.averageScore.toFixed(1)}\n\nThank you to all contestants and judges!`);
+            }, 1000);
+        }
+
+        // Import CSV data
+        function importCSV() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file to import.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 3) {
+                        alert('Invalid CSV format. File appears to be too short.');
+                        return;
+                    }
+
+                    // Try to detect if this is a judge scoresheet
+                    const firstLine = lines[0];
+                    let judgeId = null;
+                    let judgeName = '';
+
+                    // Look for judge name in first line
+                    const judgeMatch = firstLine.match(/^(.+?)\s*-\s*Complete Scoresheet/);
+                    if (judgeMatch) {
+                        judgeName = judgeMatch[1].trim();
+                        
+                        // Find or create judge
+                        let judge = CONFIG.judges.find(j => j.name === judgeName);
+                        if (!judge) {
+                            // Create new judge
+                            const newId = Math.max(...CONFIG.judges.map(j => j.id), 0) + 1;
+                            judge = { id: newId, name: judgeName };
+                            CONFIG.judges.push(judge);
+                            saveConfig();
+                            updateJudgeButtons();
+                            updateJudgesList();
+                        }
+                        judgeId = judge.id;
+                    } else {
+                        alert('Could not identify judge from CSV file. Please ensure the file starts with "Judge Name - Complete Scoresheet"');
+                        return;
+                    }
+
+                    // Find the header row (should contain "Contestant")
+                    let headerRowIndex = -1;
+                    for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].includes('Contestant') && lines[i].includes('Grand Total')) {
+                            headerRowIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (headerRowIndex === -1) {
+                        alert('Could not find header row in CSV file.');
+                        return;
+                    }
+
+                    const headers = lines[headerRowIndex].split(',').map(h => h.trim());
+                    let importedCount = 0;
+
+                    // Process data rows
+                    for (let i = headerRowIndex + 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line || line.startsWith('Category Summary')) break;
+
+                        const values = line.split(',').map(v => v.trim());
+                        const contestant = values[0];
+
+                        if (!contestant || contestant === '') continue;
+
+                        // Add contestant if not exists
+                        if (!CONFIG.contestants.includes(contestant)) {
+                            CONFIG.contestants.push(contestant);
+                        }
+
+                        // Parse scores
+                        const scores = {};
+                        let valueIndex = 1;
+
+                        Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                            scores[category] = {};
+                            subcategories.forEach(subcategory => {
+                                const score = parseFloat(values[valueIndex]) || 0;
+                                scores[category][subcategory] = score;
+                                valueIndex++;
+                            });
+                            valueIndex++; // Skip category total column
+                        });
+
+                        // Save scores
+                        const storageKey = `judge${judgeId}_${contestant}`;
+                        localStorage.setItem(storageKey, JSON.stringify(scores));
+                        importedCount++;
+                    }
+
+                    saveConfig();
+                    updateContestantsList();
+                    calculateResults();
+                    
+                    alert(`✅ Successfully imported scores for ${importedCount} contestants from ${judgeName}'s scoresheet!`);
+                    fileInput.value = ''; // Clear file input
+
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Error importing CSV file. Please check the file format and try again.');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Export master scoresheet with all data
+        function exportMasterScoresheet() {
+            let csv = 'MASTER SCORESHEET - ALL JUDGES AND CONTESTANTS\n\n';
+            
+            // Create comprehensive header
+            csv += 'Contestant,';
+            CONFIG.judges.forEach(judge => {
+                Object.keys(CONFIG.categories).forEach(category => {
+                    CONFIG.categories[category].forEach(subcategory => {
+                        csv += `${judge.name} - ${category} - ${subcategory},`;
+                    });
+                    csv += `${judge.name} - ${category} Average,`;
+                });
+                csv += `${judge.name} - Grand Total,`;
+            });
+            csv += 'Final Average,Final Total\n';
+
+            // Data rows
+            CONFIG.contestants.forEach(contestant => {
+                csv += `${contestant},`;
+                let finalTotal = 0;
+                let judgeCount = 0;
+
+                CONFIG.judges.forEach(judge => {
+                    const storageKey = `judge${judge.id}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    let judgeTotal = 0;
+
+                    if (savedScores) {
+                        judgeCount++;
+                        const scores = JSON.parse(savedScores);
+                        
+                        Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                            let categoryTotal = 0;
+                            subcategories.forEach(subcategory => {
+                                const score = scores[category] && scores[category][subcategory] ? scores[category][subcategory] : 0;
+                                csv += `${score.toFixed(1)},`;
+                                categoryTotal += score;
+                            });
+                            const categoryAverage = subcategories.length > 0 ? categoryTotal / subcategories.length : 0;
+                            csv += `${categoryAverage.toFixed(1)},`;
+                            judgeTotal += categoryAverage;
+                        });
+                    } else {
+                        // No scores, fill with zeros
+                        Object.keys(CONFIG.categories).forEach(category => {
+                            CONFIG.categories[category].forEach(() => {
+                                csv += '0.0,';
+                            });
+                            csv += '0.0,';
+                        });
+                    }
+                    
+                    csv += `${judgeTotal.toFixed(1)},`;
+                    finalTotal += judgeTotal;
+                });
+
+                const finalAverage = judgeCount > 0 ? finalTotal / judgeCount : 0;
+                csv += `${finalAverage.toFixed(1)},${finalTotal.toFixed(1)}\n`;
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'master_scoresheet_all_data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert('📋 Master scoresheet exported successfully!');
+        }
+
+        // Export final results summary
+        function exportFinalResults() {
+            calculateResults();
+            
+            const results = [];
+            CONFIG.contestants.forEach(contestant => {
+                let totalScore = 0;
+                let judgeCount = 0;
+                const categoryAverages = {};
+
+                Object.keys(CONFIG.categories).forEach(category => {
+                    categoryAverages[category] = 0;
+                });
+
+                CONFIG.judges.forEach(judge => {
+                    const storageKey = `judge${judge.id}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    
+                    if (savedScores) {
+                        judgeCount++;
+                        const scores = JSON.parse(savedScores);
+                        Object.entries(scores).forEach(([category, subcategoryScores]) => {
+                            const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
+                            const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
+                            categoryAverages[category] += categoryAverage;
+                            totalScore += categoryAverage;
+                        });
+                    }
+                });
+
+                if (judgeCount > 0) {
+                    Object.keys(categoryAverages).forEach(category => {
+                        categoryAverages[category] = categoryAverages[category] / judgeCount;
+                    });
+
+                    results.push({
+                        contestant,
+                        totalScore,
+                        averageScore: totalScore / judgeCount,
+                        categoryAverages
+                    });
+                }
+            });
+
+            results.sort((a, b) => b.totalScore - a.totalScore);
+
+            let csv = 'FINAL RESULTS SUMMARY\n\n';
+            csv += 'Rank,Contestant,Total Score,Average Score,';
+            Object.keys(CONFIG.categories).forEach(category => {
+                csv += `${category} Average,`;
+            });
+            csv += '\n';
+
+            results.forEach((result, index) => {
+                const rank = index + 1;
+                let rankDisplay = rank;
+                if (rank === 1) rankDisplay = '🥇 WINNER';
+                else if (rank === 2) rankDisplay = '🥈 RUNNER-UP';
+                else if (rank === 3) rankDisplay = '🥉 SECOND RUNNER-UP';
+
+                csv += `${rankDisplay},${result.contestant},${result.totalScore.toFixed(1)},${result.averageScore.toFixed(1)},`;
+                Object.keys(CONFIG.categories).forEach(category => {
+                    csv += `${result.categoryAverages[category].toFixed(1)},`;
+                });
+                csv += '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'final_results_summary.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert('🏆 Final results summary exported successfully!');
+        }
+
+        // Export category breakdown analysis
+        function exportCategoryBreakdown() {
+            let csv = 'CATEGORY BREAKDOWN ANALYSIS\n\n';
+            
+            Object.keys(CONFIG.categories).forEach(category => {
+                csv += `\n${category.toUpperCase()} CATEGORY:\n`;
+                csv += 'Contestant,';
+                CONFIG.judges.forEach(judge => {
+                    csv += `${judge.name},`;
+                });
+                csv += 'Average\n';
+
+                CONFIG.contestants.forEach(contestant => {
+                    csv += `${contestant},`;
+                    let categorySum = 0;
+                    let judgeCount = 0;
+
+                    CONFIG.judges.forEach(judge => {
+                        const storageKey = `judge${judge.id}_${contestant}`;
+                        const savedScores = localStorage.getItem(storageKey);
+                        
+                        if (savedScores) {
+                            const scores = JSON.parse(savedScores);
+                            if (scores[category]) {
+                                const categoryTotal = Object.values(scores[category]).reduce((sum, score) => sum + score, 0);
+                                const categoryAverage = Object.keys(scores[category]).length > 0 ? categoryTotal / Object.keys(scores[category]).length : 0;
+                                csv += `${categoryAverage.toFixed(1)},`;
+                                categorySum += categoryAverage;
+                                judgeCount++;
+                            } else {
+                                csv += '0.0,';
+                            }
+                        } else {
+                            csv += '0.0,';
+                        }
+                    });
+
+                    const finalAverage = judgeCount > 0 ? categorySum / judgeCount : 0;
+                    csv += `${finalAverage.toFixed(1)}\n`;
+                });
+                csv += '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'category_breakdown_analysis.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert('📊 Category breakdown analysis exported successfully!');
+        }
+
+        // Update data status display
+        function updateDataStatus() {
+            const statusContainer = document.getElementById('dataStatus');
+            if (!statusContainer) return;
+
+            let totalScores = 0;
+            let completedJudges = 0;
+            let completedContestants = 0;
+
+            // Count completed scores
+            CONFIG.judges.forEach(judge => {
+                let judgeHasScores = false;
+                CONFIG.contestants.forEach(contestant => {
+                    const storageKey = `judge${judge.id}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    if (savedScores) {
+                        totalScores++;
+                        judgeHasScores = true;
+                    }
+                });
+                if (judgeHasScores) completedJudges++;
+            });
+
+            // Count contestants with at least one score
+            CONFIG.contestants.forEach(contestant => {
+                let contestantHasScores = false;
+                CONFIG.judges.forEach(judge => {
+                    const storageKey = `judge${judge.id}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    if (savedScores) {
+                        contestantHasScores = true;
+                    }
+                });
+                if (contestantHasScores) completedContestants++;
+            });
+
+            const totalPossible = CONFIG.judges.length * CONFIG.contestants.length;
+            const completionPercentage = totalPossible > 0 ? (totalScores / totalPossible * 100).toFixed(1) : 0;
+
+            statusContainer.innerHTML = `
+                <div class="text-center">
+                    <div class="text-white font-bold text-lg">${totalScores}/${totalPossible}</div>
+                    <div class="text-white/60 text-xs">Scoresheets Completed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-white font-bold text-lg">${completedJudges}/${CONFIG.judges.length}</div>
+                    <div class="text-white/60 text-xs">Judges Participating</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-white font-bold text-lg">${completionPercentage}%</div>
+                    <div class="text-white/60 text-xs">Overall Completion</div>
+                </div>
+            `;
         }
 
         // Show detailed scores for a contestant
@@ -1327,5 +1881,5 @@
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'973051d3c67fce4e',t:'MTc1NTg0NDIwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97305c400247eb9d',t:'MTc1NTg0NDYzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
