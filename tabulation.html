@@ -1086,7 +1086,8 @@
                         const scores = JSON.parse(savedScores);
                         if (scores[category]) {
                             const categoryTotal = Object.values(scores[category]).reduce((sum, score) => sum + score, 0);
-                            csv += `${contestant}: ${categoryTotal.toFixed(1)}\n`;
+                            const categoryAverage = Object.keys(scores[category]).length > 0 ? categoryTotal / Object.keys(scores[category]).length : 0;
+                            csv += `${contestant}: ${categoryAverage.toFixed(1)}\n`;
                         }
                     }
                 });
@@ -1128,8 +1129,9 @@
                         const scores = JSON.parse(savedScores);
                         Object.entries(scores).forEach(([category, subcategoryScores]) => {
                             const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
-                            categoryTotals[category] += categoryTotal;
-                            totalScore += categoryTotal;
+                            const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
+                            categoryTotals[category] += categoryAverage;
+                            totalScore += categoryAverage;
                         });
                     }
                 });
@@ -1203,7 +1205,8 @@
                     details += `${judge.name}:\n`;
                     Object.entries(scores).forEach(([category, subcategoryScores]) => {
                         const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
-                        details += `  ${category}: ${categoryTotal.toFixed(1)}\n`;
+                        const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
+                        details += `  ${category}: ${categoryAverage.toFixed(1)}\n`;
                     });
                     details += '\n';
                 }
@@ -1243,7 +1246,8 @@
                         judgeScores[judge.id] = scores;
                         Object.entries(scores).forEach(([category, subcategoryScores]) => {
                             const categoryTotal = Object.values(subcategoryScores).reduce((sum, score) => sum + score, 0);
-                            totalScore += categoryTotal;
+                            const categoryAverage = Object.keys(subcategoryScores).length > 0 ? categoryTotal / Object.keys(subcategoryScores).length : 0;
+                            totalScore += categoryAverage;
                         });
                     }
                 });
@@ -1268,7 +1272,8 @@
                     CONFIG.judges.forEach(judge => {
                         if (result.judgeScores[judge.id] && result.judgeScores[judge.id][category]) {
                             const categoryTotal = Object.values(result.judgeScores[judge.id][category]).reduce((sum, score) => sum + score, 0);
-                            csv += `${categoryTotal.toFixed(1)},`;
+                            const categoryAverage = Object.keys(result.judgeScores[judge.id][category]).length > 0 ? categoryTotal / Object.keys(result.judgeScores[judge.id][category]).length : 0;
+                            csv += `${categoryAverage.toFixed(1)},`;
                         } else {
                             csv += '0,';
                         }
@@ -1322,5 +1327,5 @@
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97304353a445fd89',t:'MTc1NTg0MzYxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'973051d3c67fce4e',t:'MTc1NTg0NDIwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
