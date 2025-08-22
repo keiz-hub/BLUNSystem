@@ -152,8 +152,8 @@
                     <button onclick="saveScores()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Save Scores</button>
                     <button onclick="showPage('home')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Back to Home</button>
                 </div>
-                <div id="sessionWarning" class="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-4 mb-4 hidden">
-                    <p class="text-yellow-200">⚠️ Your session will expire in <span id="timeRemaining"></span> minutes of inactivity.</p>
+                <div id="sessionWarning" class="bg-green-600/20 border border-green-500/30 rounded-lg p-4 mb-4 hidden">
+                    <p class="text-green-200">✅ Your session is active for 1 hour. Time remaining: <span id="timeRemaining"></span> minutes.</p>
                 </div>
             </div>
             
@@ -247,8 +247,8 @@
     <script>
         // Enhanced cross-device session management
         const DEVICE_ID = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        const SESSION_HEARTBEAT_INTERVAL = 2000; // 2 seconds
-        const SESSION_TIMEOUT = 10000; // 10 seconds timeout
+        const SESSION_HEARTBEAT_INTERVAL = 5000; // 5 seconds
+        const SESSION_TIMEOUT = 3600000; // 1 hour timeout (3600000 ms)
         const GLOBAL_SESSION_KEY = 'pageant_global_sessions';
         
         // Configuration - Now dynamically managed
@@ -403,7 +403,7 @@
                         showLockOverlay(currentPageType, currentJudge);
                     }
                 }
-            }, 3000);
+            }, 10000); // Check every 10 seconds
         }
 
         function forceUnlockAll() {
@@ -446,18 +446,18 @@
             
             // Check admin session
             if (sessions.admin) {
-                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000);
+                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000 / 60);
                 const isOurs = sessions.admin.deviceId === DEVICE_ID;
-                sessionInfo += `Admin Panel: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}s ago)\n`;
+                sessionInfo += `Admin Panel: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}m ago)\n`;
             }
             
             // Check judge sessions
             CONFIG.judges.forEach(judge => {
                 const sessionKey = `judge_${judge.id}`;
                 if (sessions[sessionKey]) {
-                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000);
+                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000 / 60);
                     const isOurs = sessions[sessionKey].deviceId === DEVICE_ID;
-                    sessionInfo += `${judge.name}: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}s ago)\n`;
+                    sessionInfo += `${judge.name}: ${isOurs ? 'Your device' : 'Another device'} (${timeAgo}m ago)\n`;
                 }
             });
             
@@ -483,11 +483,11 @@
             const adminDiv = document.createElement('div');
             if (sessions.admin) {
                 const isOurs = sessions.admin.deviceId === DEVICE_ID;
-                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000);
+                const timeAgo = Math.floor((Date.now() - sessions.admin.lastHeartbeat) / 1000 / 60);
                 adminDiv.innerHTML = `
                     <div class="flex items-center justify-between p-2 rounded ${isOurs ? 'bg-green-600/20' : 'bg-red-600/20'}">
                         <span class="text-white">Admin Panel</span>
-                        <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}s ago)`}</span>
+                        <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}m ago)`}</span>
                     </div>
                 `;
             } else {
@@ -507,11 +507,11 @@
                 const sessionKey = `judge_${judge.id}`;
                 if (sessions[sessionKey]) {
                     const isOurs = sessions[sessionKey].deviceId === DEVICE_ID;
-                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000);
+                    const timeAgo = Math.floor((Date.now() - sessions[sessionKey].lastHeartbeat) / 1000 / 60);
                     judgeDiv.innerHTML += `
                         <div class="flex items-center justify-between p-2 rounded ${isOurs ? 'bg-green-600/20' : 'bg-red-600/20'}">
                             <span class="text-white">${judge.name}</span>
-                            <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}s ago)`}</span>
+                            <span class="text-xs ${isOurs ? 'text-green-300' : 'text-red-300'}">${isOurs ? 'Your device' : `Locked (${timeAgo}m ago)`}</span>
                         </div>
                     `;
                 } else {
@@ -769,8 +769,8 @@
                 const sessions = getGlobalSessions();
                 const sessionKey = `judge_${currentJudge}`;
                 if (sessions[sessionKey] && sessions[sessionKey].deviceId === DEVICE_ID) {
-                    const secondsLeft = Math.floor((SESSION_TIMEOUT - (Date.now() - sessions[sessionKey].lastHeartbeat)) / 1000);
-                    const minutesLeft = Math.floor(secondsLeft / 60);
+                    const millisecondsLeft = SESSION_TIMEOUT - (Date.now() - sessions[sessionKey].lastHeartbeat);
+                    const minutesLeft = Math.floor(millisecondsLeft / 1000 / 60);
                     timeSpan.textContent = Math.max(0, minutesLeft);
                 }
             }
@@ -1113,5 +1113,5 @@
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f78aec50ece2b',t:'MTc1NTgzNTMxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f835516aef879',t:'MTc1NTgzNTc0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
