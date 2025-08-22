@@ -142,14 +142,12 @@
 
     <!-- Judge Scoring Page -->
     <div id="judgePage" class="page hidden">
-        <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto px-4 py-8">
             <div class="bg-white/10 backdrop-blur-md rounded-xl p-8 mb-8">
                 <h2 id="judgeTitle" class="text-3xl font-bold text-white mb-4">Judge Scoring Panel</h2>
                 <div class="flex flex-wrap gap-4 mb-6">
-                    <select id="contestantSelect" class="bg-white/20 text-white rounded-lg px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Select Contestant</option>
-                    </select>
-                    <button onclick="saveScores()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Save Scores</button>
+                    <button onclick="saveAllScores()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">💾 Save All Scores</button>
+                    <button onclick="exportJudgeScoresheet()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">📊 Export My Scoresheet</button>
                     <button onclick="showPage('home')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Back to Home</button>
                 </div>
                 <div id="sessionWarning" class="bg-green-600/20 border border-green-500/30 rounded-lg p-4 mb-4 hidden">
@@ -157,8 +155,9 @@
                 </div>
             </div>
             
-            <div id="scoringForm" class="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                <!-- Scoring categories will be generated here -->
+            <!-- Contestants Grid -->
+            <div id="contestantsGrid" class="grid gap-8">
+                <!-- Contestant scoring cards will be generated here -->
             </div>
         </div>
     </div>
@@ -213,11 +212,20 @@
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="flex flex-wrap gap-4">
+                <div class="flex flex-wrap gap-4 mb-8">
                     <button onclick="calculateResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Calculate Results</button>
-                    <button onclick="exportToCSV()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Export CSV</button>
+                    <button onclick="exportToCSV()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Export Combined Results</button>
                     <button onclick="clearAllData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Clear All Data</button>
                     <button onclick="showPage('home')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Back to Home</button>
+                </div>
+                
+                <!-- Individual Judge Scoresheets -->
+                <div class="bg-white/10 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold text-white mb-4">📊 Individual Judge Scoresheets</h3>
+                    <p class="text-white/80 text-sm mb-4">Export individual judge scoresheets for detailed analysis:</p>
+                    <div id="judgeExportButtons" class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <!-- Judge export buttons will be generated here -->
+                    </div>
                 </div>
             </div>
             
@@ -628,6 +636,9 @@
                 `;
                 container.appendChild(div);
             });
+            
+            // Also update export buttons when judges list changes
+            updateJudgeExportButtons();
         }
 
         // Add new contestant
@@ -733,7 +744,115 @@
             document.getElementById('adminPage').classList.remove('hidden');
             updateJudgesList();
             updateContestantsList();
+            updateJudgeExportButtons();
             calculateResults();
+        }
+
+        // Update judge export buttons in admin
+        function updateJudgeExportButtons() {
+            const container = document.getElementById('judgeExportButtons');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            CONFIG.judges.forEach(judge => {
+                const button = document.createElement('button');
+                button.onclick = () => exportJudgeScoresheet(judge.id);
+                button.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm';
+                button.innerHTML = `📊 ${judge.name}`;
+                container.appendChild(button);
+            });
+        }
+
+        // Export judge scoresheet from admin (modified to accept judgeId parameter)
+        function exportJudgeScoresheet(judgeId = null) {
+            const targetJudgeId = judgeId || currentJudge;
+            const judge = CONFIG.judges.find(j => j.id === targetJudgeId);
+            
+            if (!judge) {
+                alert('Judge not found!');
+                return;
+            }
+            
+            let csv = `${judge.name} - Complete Scoresheet\n\n`;
+            
+            // Header row
+            csv += 'Contestant,';
+            Object.keys(CONFIG.categories).forEach(category => {
+                CONFIG.categories[category].forEach(subcategory => {
+                    csv += `${category} - ${subcategory},`;
+                });
+                csv += `${category} Total,`;
+            });
+            csv += 'Grand Total\n';
+
+            // Data rows
+            CONFIG.contestants.forEach(contestant => {
+                csv += `${contestant},`;
+                let grandTotal = 0;
+                
+                const storageKey = `judge${targetJudgeId}_${contestant}`;
+                const savedScores = localStorage.getItem(storageKey);
+                
+                if (savedScores) {
+                    const scores = JSON.parse(savedScores);
+                    
+                    Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                        let categoryTotal = 0;
+                        
+                        subcategories.forEach(subcategory => {
+                            const score = scores[category] && scores[category][subcategory] ? scores[category][subcategory] : 0;
+                            csv += `${score.toFixed(1)},`;
+                            categoryTotal += score;
+                        });
+                        
+                        csv += `${categoryTotal.toFixed(1)},`;
+                        grandTotal += categoryTotal;
+                    });
+                } else {
+                    // No scores found, fill with zeros
+                    Object.keys(CONFIG.categories).forEach(category => {
+                        CONFIG.categories[category].forEach(() => {
+                            csv += '0.0,';
+                        });
+                        csv += '0.0,';
+                    });
+                }
+                
+                csv += `${grandTotal.toFixed(1)}\n`;
+            });
+
+            // Add category summary
+            csv += '\n\nCategory Summary:\n';
+            Object.keys(CONFIG.categories).forEach(category => {
+                csv += `\n${category}:\n`;
+                CONFIG.contestants.forEach(contestant => {
+                    const storageKey = `judge${targetJudgeId}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    if (savedScores) {
+                        const scores = JSON.parse(savedScores);
+                        if (scores[category]) {
+                            const categoryTotal = Object.values(scores[category]).reduce((sum, score) => sum + score, 0);
+                            csv += `${contestant}: ${categoryTotal.toFixed(1)}\n`;
+                        } else {
+                            csv += `${contestant}: 0.0\n`;
+                        }
+                    } else {
+                        csv += `${contestant}: 0.0\n`;
+                    }
+                });
+            });
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${judge.name.replace(/\s+/g, '_')}_scoresheet.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert(`📊 Scoresheet exported successfully for ${judge.name}!`);
         }
 
         // Show judge scoring page
@@ -776,107 +895,129 @@
             }
         }
 
-        // Populate contestant dropdown
+        // Populate contestant dropdown (kept for compatibility)
         function populateContestantSelect() {
-            const select = document.getElementById('contestantSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">Select Contestant</option>';
-            CONFIG.contestants.forEach(contestant => {
-                const option = document.createElement('option');
-                option.value = contestant;
-                option.textContent = contestant;
-                select.appendChild(option);
-            });
+            // This function is kept for compatibility but no longer needed
+            // since we now show all contestants at once
         }
 
-        // Generate scoring form for current judge
+        // Generate scoring form for current judge - now shows all contestants
         function generateScoringForm() {
-            const form = document.getElementById('scoringForm');
-            form.innerHTML = '';
+            const grid = document.getElementById('contestantsGrid');
+            grid.innerHTML = '';
 
-            Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
-                const categoryCard = document.createElement('div');
-                categoryCard.className = 'bg-white/10 backdrop-blur-md rounded-xl p-6 card-hover';
+            CONFIG.contestants.forEach(contestant => {
+                const contestantCard = document.createElement('div');
+                contestantCard.className = 'bg-white/10 backdrop-blur-md rounded-xl p-8 card-hover';
                 
-                let subcategoryInputs = '';
-                subcategories.forEach(subcategory => {
-                    subcategoryInputs += `
-                        <div class="mb-4">
-                            <label class="block text-white text-sm font-medium mb-2">${subcategory}</label>
-                            <input type="number" 
-                                   min="0" max="10" step="0.1"
-                                   class="w-full bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                   data-category="${category}" 
-                                   data-subcategory="${subcategory}"
-                                   placeholder="0-10">
+                let categoriesHTML = '';
+                Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                    let subcategoryInputs = '';
+                    subcategories.forEach(subcategory => {
+                        subcategoryInputs += `
+                            <div class="mb-3">
+                                <label class="block text-white text-xs font-medium mb-1">${subcategory}</label>
+                                <input type="number" 
+                                       min="0" max="10" step="0.1"
+                                       class="w-full bg-white/20 text-white rounded-lg px-3 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                                       data-contestant="${contestant}"
+                                       data-category="${category}" 
+                                       data-subcategory="${subcategory}"
+                                       placeholder="0-10">
+                            </div>
+                        `;
+                    });
+
+                    categoriesHTML += `
+                        <div class="bg-white/10 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-bold text-white mb-3 border-b border-white/20 pb-2">${category}</h4>
+                            <div class="grid grid-cols-1 gap-2">
+                                ${subcategoryInputs}
+                            </div>
+                            <div class="mt-3 p-2 bg-white/10 rounded-lg">
+                                <span class="text-white font-medium text-sm">Category Total: </span>
+                                <span id="total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold">0.0</span>
+                            </div>
                         </div>
                     `;
                 });
 
-                categoryCard.innerHTML = `
-                    <h3 class="text-xl font-bold text-white mb-4 border-b border-white/20 pb-2">${category}</h3>
-                    ${subcategoryInputs}
-                    <div class="mt-4 p-3 bg-white/10 rounded-lg">
-                        <span class="text-white font-medium">Category Total: </span>
-                        <span id="total-${category.replace(/\s+/g, '')}" class="text-purple-300 font-bold">0.0</span>
+                contestantCard.innerHTML = `
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-white bg-purple-600/30 rounded-lg py-3 px-4 border-2 border-purple-400">${contestant}</h3>
+                        <div class="mt-2 p-2 bg-white/10 rounded-lg">
+                            <span class="text-white font-medium">Grand Total: </span>
+                            <span id="grandtotal-${contestant.replace(/\s+/g, '')}" class="text-yellow-300 font-bold text-lg">0.0</span>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${categoriesHTML}
                     </div>
                 `;
 
-                form.appendChild(categoryCard);
+                grid.appendChild(contestantCard);
             });
 
             // Add event listeners for real-time calculation
-            form.addEventListener('input', calculateCategoryTotals);
+            grid.addEventListener('input', calculateAllTotals);
+            
+            // Load existing scores for all contestants
+            loadAllExistingScores();
         }
 
-        // Calculate category totals in real-time
-        function calculateCategoryTotals() {
-            Object.keys(CONFIG.categories).forEach(category => {
-                const inputs = document.querySelectorAll(`input[data-category="${category}"]`);
-                let total = 0;
-                inputs.forEach(input => {
-                    total += parseFloat(input.value) || 0;
+        // Calculate all totals in real-time for all contestants
+        function calculateAllTotals() {
+            CONFIG.contestants.forEach(contestant => {
+                let grandTotal = 0;
+                
+                Object.keys(CONFIG.categories).forEach(category => {
+                    const inputs = document.querySelectorAll(`input[data-contestant="${contestant}"][data-category="${category}"]`);
+                    let categoryTotal = 0;
+                    inputs.forEach(input => {
+                        categoryTotal += parseFloat(input.value) || 0;
+                    });
+                    
+                    const totalElement = document.getElementById(`total-${contestant.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}`);
+                    if (totalElement) {
+                        totalElement.textContent = categoryTotal.toFixed(1);
+                    }
+                    
+                    grandTotal += categoryTotal;
                 });
-                const totalElement = document.getElementById(`total-${category.replace(/\s+/g, '')}`);
-                if (totalElement) {
-                    totalElement.textContent = total.toFixed(1);
+                
+                const grandTotalElement = document.getElementById(`grandtotal-${contestant.replace(/\s+/g, '')}`);
+                if (grandTotalElement) {
+                    grandTotalElement.textContent = grandTotal.toFixed(1);
                 }
             });
         }
 
-        // Save scores to local storage
-        function saveScores() {
-            const contestant = document.getElementById('contestantSelect').value;
-            if (!contestant) {
-                alert('Please select a contestant first!');
-                return;
-            }
-
-            const scores = {};
-            Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
-                scores[category] = {};
-                subcategories.forEach(subcategory => {
-                    const input = document.querySelector(`input[data-category="${category}"][data-subcategory="${subcategory}"]`);
-                    scores[category][subcategory] = parseFloat(input.value) || 0;
-                });
-            });
-
-            // Save to local storage
-            const storageKey = `judge${currentJudge}_${contestant}`;
-            localStorage.setItem(storageKey, JSON.stringify(scores));
+        // Save all scores to local storage
+        function saveAllScores() {
+            let savedCount = 0;
             
-            alert(`Scores saved successfully for ${contestant}!`);
+            CONFIG.contestants.forEach(contestant => {
+                const scores = {};
+                Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                    scores[category] = {};
+                    subcategories.forEach(subcategory => {
+                        const input = document.querySelector(`input[data-contestant="${contestant}"][data-category="${category}"][data-subcategory="${subcategory}"]`);
+                        scores[category][subcategory] = parseFloat(input.value) || 0;
+                    });
+                });
+
+                // Save to local storage
+                const storageKey = `judge${currentJudge}_${contestant}`;
+                localStorage.setItem(storageKey, JSON.stringify(scores));
+                savedCount++;
+            });
+            
+            alert(`✅ All scores saved successfully for ${savedCount} contestants!`);
         }
 
-        // Load existing scores for selected contestant
-        function loadExistingScores() {
-            const select = document.getElementById('contestantSelect');
-            if (!select) return;
-            
-            select.addEventListener('change', function() {
-                const contestant = this.value;
-                if (!contestant) return;
-
+        // Load existing scores for all contestants
+        function loadAllExistingScores() {
+            CONFIG.contestants.forEach(contestant => {
                 const storageKey = `judge${currentJudge}_${contestant}`;
                 const savedScores = localStorage.getItem(storageKey);
                 
@@ -884,15 +1025,83 @@
                     const scores = JSON.parse(savedScores);
                     Object.entries(scores).forEach(([category, subcategoryScores]) => {
                         Object.entries(subcategoryScores).forEach(([subcategory, score]) => {
-                            const input = document.querySelector(`input[data-category="${category}"][data-subcategory="${subcategory}"]`);
+                            const input = document.querySelector(`input[data-contestant="${contestant}"][data-category="${category}"][data-subcategory="${subcategory}"]`);
                             if (input) {
                                 input.value = score;
                             }
                         });
                     });
-                    calculateCategoryTotals();
                 }
             });
+            
+            // Calculate all totals after loading
+            calculateAllTotals();
+        }
+
+        // Export individual judge scoresheet
+        function exportJudgeScoresheet() {
+            const judge = CONFIG.judges.find(j => j.id === currentJudge);
+            let csv = `${judge.name} - Complete Scoresheet\n\n`;
+            
+            // Header row
+            csv += 'Contestant,';
+            Object.keys(CONFIG.categories).forEach(category => {
+                CONFIG.categories[category].forEach(subcategory => {
+                    csv += `${category} - ${subcategory},`;
+                });
+                csv += `${category} Total,`;
+            });
+            csv += 'Grand Total\n';
+
+            // Data rows
+            CONFIG.contestants.forEach(contestant => {
+                csv += `${contestant},`;
+                let grandTotal = 0;
+                
+                Object.entries(CONFIG.categories).forEach(([category, subcategories]) => {
+                    let categoryTotal = 0;
+                    
+                    subcategories.forEach(subcategory => {
+                        const input = document.querySelector(`input[data-contestant="${contestant}"][data-category="${category}"][data-subcategory="${subcategory}"]`);
+                        const score = parseFloat(input?.value) || 0;
+                        csv += `${score.toFixed(1)},`;
+                        categoryTotal += score;
+                    });
+                    
+                    csv += `${categoryTotal.toFixed(1)},`;
+                    grandTotal += categoryTotal;
+                });
+                
+                csv += `${grandTotal.toFixed(1)}\n`;
+            });
+
+            // Add category summary
+            csv += '\n\nCategory Summary:\n';
+            Object.keys(CONFIG.categories).forEach(category => {
+                csv += `\n${category}:\n`;
+                CONFIG.contestants.forEach(contestant => {
+                    const storageKey = `judge${currentJudge}_${contestant}`;
+                    const savedScores = localStorage.getItem(storageKey);
+                    if (savedScores) {
+                        const scores = JSON.parse(savedScores);
+                        if (scores[category]) {
+                            const categoryTotal = Object.values(scores[category]).reduce((sum, score) => sum + score, 0);
+                            csv += `${contestant}: ${categoryTotal.toFixed(1)}\n`;
+                        }
+                    }
+                });
+            });
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${judge.name.replace(/\s+/g, '_')}_scoresheet.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert(`📊 Scoresheet exported successfully for ${judge.name}!`);
         }
 
         // Calculate final results
@@ -1113,5 +1322,5 @@
         // Update time remaining every minute
         setInterval(updateTimeRemaining, 60000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'972f835516aef879',t:'MTc1NTgzNTc0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97304353a445fd89',t:'MTc1NTg0MzYxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
