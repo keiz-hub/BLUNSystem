@@ -48,14 +48,31 @@
       font-size: 1rem;
       opacity: 0.8;
     }
+
+    /* Hidden button */
+    .hidden-btn {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="logo">
     <!-- Use your own logo image stored in the same folder -->
-    <img src="BLUN-NEW-LOGO-2025 HD.png" alt="Flipping Logo" href="https://docs.google.com/spreadsheets/d/1noTUwOfD6Kvn0fkmS707qhCW0b1SECyYrlKVrSzkOLw/edit?usp=sharing">
+    <img src="BLUN-NEW-LOGO-2025 HD.png" alt="Flipping Logo">
   </div>
   <h1>This Page is Under Development</h1>
   <p>Please check back later.</p>
+
+  <!-- Hidden Button -->
+  <a href="https://docs.google.com/spreadsheets/d/1noTUwOfD6Kvn0fkmS707qhCW0b1SECyYrlKVrSzkOLw/edit?usp=sharing" class="hidden-btn" target="_blank" id="hiddenLink">Open Sheet</a>
+
+  <script>
+    // Optional: Trigger the hidden link programmatically (for example, after a keypress)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'g') { // Press "g" to open the sheet
+        document.getElementById('hiddenLink').click();
+      }
+    });
+  </script>
 </body>
 </html>
