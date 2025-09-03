@@ -101,9 +101,9 @@ html lang="en">
         
         .neon-text {
             text-shadow: 
-                0 0 5px currentColor,
-                0 0 10px currentColor,
-                0 0 15px currentColor;
+                0 0 3px currentColor,
+                0 0 6px currentColor,
+                0 0 9px currentColor;
         }
         
         .score-glow {
@@ -163,11 +163,12 @@ html lang="en">
         
         .crown-champion {
             position: absolute;
-            top: -25px;
-            right: -15px;
-            font-size: 3rem;
+            top: -30px;
+            right: -20px;
+            font-size: 4rem;
             animation: crownBounce 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.8));
+            z-index: 10;
         }
         
         @keyframes crownBounce {
@@ -264,9 +265,9 @@ html lang="en">
             }
             
             .crown-champion {
-                font-size: 2rem;
-                top: -15px;
-                right: -10px;
+                font-size: 2.5rem;
+                top: -20px;
+                right: -15px;
             }
         }
     </style>
@@ -295,7 +296,7 @@ html lang="en">
                 <div class="flex flex-col items-center">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-4 h-4 bg-red-500 rounded-full live-pulse"></div>
-                        <span class="text-white font-bold text-xl neon-text">LIVE</span>
+                        <span class="text-gray-200 font-bold text-xl neon-text">LIVE</span>
                     </div>
                     <div class="text-gray-300 font-mono text-sm" id="lastUpdate"></div>
                 </div>
@@ -309,13 +310,13 @@ html lang="en">
                 </div>
             </div>
             
-            <h1 class="text-4xl md:text-7xl font-orbitron font-black text-white mb-2 neon-text">
+            <h1 class="text-4xl md:text-7xl font-orbitron font-black text-gray-200 mb-2 neon-text">
                 INTRAMURALS 2025
             </h1>
-            <h2 class="text-xl md:text-3xl font-rajdhani font-bold text-cyan-300 mb-2">
+            <h2 class="text-xl md:text-3xl font-rajdhani font-bold text-cyan-400 mb-2">
                 LIVE SCOREBOARD
             </h2>
-            <p class="text-gray-300 text-lg">
+            <p class="text-gray-400 text-lg">
                 Bonifacio Luz Natividad Educational Foundation, Inc.
             </p>
         </div>
@@ -448,7 +449,7 @@ html lang="en">
                             </div>
                             
                             <!-- Team Name -->
-                            <h3 class="text-2xl md:text-4xl font-rajdhani font-bold text-white mb-4 neon-text">
+                            <h3 class="text-2xl md:text-4xl font-rajdhani font-bold text-gray-200 mb-4 neon-text">
                                 ${team.name}
                             </h3>
                             
@@ -457,10 +458,10 @@ html lang="en">
                             
                             <!-- Score Display -->
                             <div class="score-glow">
-                                <div class="text-4xl md:text-6xl font-orbitron font-black text-white mb-2 neon-text">
+                                <div class="text-4xl md:text-6xl font-orbitron font-black text-gray-100 mb-2 neon-text">
                                     ${team.score.toLocaleString()}
                                 </div>
-                                <div class="text-gray-300 font-rajdhani font-semibold text-lg tracking-wider">
+                                <div class="text-gray-400 font-rajdhani font-semibold text-lg tracking-wider">
                                     TOTAL POINTS
                                 </div>
                             </div>
@@ -489,5 +490,5 @@ html lang="en">
         // Auto-refresh timestamp every 30 seconds
         setInterval(updateLastUpdateTime, 30000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9793dfaf52f2409b',t:'MTc1Njg4ODEwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9793eb2d643dfd74',t:'MTc1Njg4ODU3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
