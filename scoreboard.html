@@ -164,39 +164,27 @@
         }
         
         .logo-3d {
-            background: 
-                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), transparent 50%),
-                linear-gradient(145deg, #f8f9fa, #e9ecef);
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             color: #333;
-            box-shadow: 
-                0 4px 8px rgba(0,0,0,0.2),
-                inset 0 1px 2px rgba(255,255,255,0.8),
-                inset 0 -1px 2px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            transition: all 0.3s ease;
+            animation: logoFloat 4s ease-in-out infinite;
         }
         
         @media (min-width: 768px) {
-            .logo-3d {
-                box-shadow: 
-                    0 8px 16px rgba(0,0,0,0.2),
-                    inset 0 2px 4px rgba(255,255,255,0.8),
-                    inset 0 -2px 4px rgba(0,0,0,0.1);
-                transform: translateZ(20px);
-            }
-            
             .logo-3d:hover {
-                transform: translateZ(30px) rotateY(10deg);
+                transform: translateZ(40px) rotateY(10deg) scale(1.1);
+                filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4)) drop-shadow(0 6px 12px rgba(0,0,0,0.3));
             }
         }
         
         @media (max-width: 767px) {
             .logo-3d:hover {
-                transform: scale(1.1);
+                transform: scale(1.15) translateY(-4px);
+                filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)) drop-shadow(0 5px 10px rgba(0,0,0,0.3));
             }
         }
         
@@ -246,10 +234,20 @@
             50% { transform: translateY(-8px) rotateZ(5deg); }
         }
         
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) rotateZ(-2deg); }
+            50% { transform: translateY(-6px) rotateZ(2deg); }
+        }
+        
         @media (min-width: 768px) {
             @keyframes float {
                 0%, 100% { transform: translateZ(30px) translateY(0px) rotateZ(-5deg); }
                 50% { transform: translateZ(35px) translateY(-10px) rotateZ(5deg); }
+            }
+            
+            @keyframes logoFloat {
+                0%, 100% { transform: translateZ(20px) translateY(0px) rotateZ(-2deg); }
+                50% { transform: translateZ(30px) translateY(-8px) rotateZ(2deg); }
             }
         }
         
@@ -365,10 +363,10 @@
         <!-- School Logo and Intramurals Emblem -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-4 md:mb-6">
             <!-- School Logo -->
-            <div class="school-logo w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20">
-                <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLNEFI School Logo" class="w-full h-full object-cover" 
+            <div class="school-logo w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
+                <img src="school-logo.png" alt="BLNEFI School Logo" class="w-full h-full object-contain" 
                      onerror="this.src=''; this.alt='School Logo'; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full hidden items-center justify-center text-white font-bold text-xs sm:text-sm">
+                <div class="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg hidden items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg">
                     BLNEFI
                 </div>
             </div>
@@ -385,10 +383,10 @@
             </div>
             
             <!-- Intramurals Emblem -->
-            <div class="intramurals-logo w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20">
-                <img src="intramurals-logo.png" alt="Intramurals 2025 Logo" class="w-full h-full object-cover" 
+            <div class="intramurals-logo w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
+                <img src="intramurals-logo.png" alt="Intramurals 2025 Logo" class="w-full h-full object-contain" 
                      onerror="this.src=''; this.alt='Intramurals Logo'; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full hidden items-center justify-center text-white font-bold text-xs sm:text-sm">
+                <div class="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-lg hidden items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg">
                     2025
                 </div>
             </div>
@@ -412,31 +410,7 @@
         </div>
     </div>
 
-    <!-- Admin Controls -->
-    <div class="fixed bottom-4 right-4">
-        <button onclick="toggleAdmin()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg backdrop-blur-sm transition-all transform hover:scale-105 shadow-lg">
-            ⚙️ Admin
-        </button>
-    </div>
 
-    <div id="adminPanel" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] sm:max-h-[80vh] overflow-y-auto shadow-2xl transform">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Update Scores</h3>
-                <button onclick="toggleAdmin()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            
-            <div class="space-y-4" id="adminControls">
-                <!-- Admin controls will be generated here -->
-            </div>
-            
-            <div class="mt-6 pt-4 border-t">
-                <button onclick="resetScores()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors transform hover:scale-105">
-                    Reset All Scores
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Team data - Edit scores here for real-time updates
@@ -446,28 +420,28 @@
                 name: "Red Dragons",
                 color: "red",
                 score: 850,
-                logo: "🐉"
+                logo: "red-dragons.png"
             },
             {
                 id: 2,
                 name: "Blue Sharks",
                 color: "blue", 
                 score: 920,
-                logo: "🦈"
+                logo: "blue-sharks.png"
             },
             {
                 id: 3,
                 name: "Yellow Eagles",
                 color: "yellow",
                 score: 780,
-                logo: "🦅"
+                logo: "yellow-eagles.png"
             },
             {
                 id: 4,
                 name: "Green Panthers",
                 color: "green",
                 score: 890,
-                logo: "🐆"
+                logo: "green-panthers.png"
             }
         ];
 
@@ -535,8 +509,12 @@
                 teamCard.innerHTML = `
                     ${rankBadge}
                     <div class="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
-                        <div class="logo-3d w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-2xl sm:text-3xl flex-shrink-0">
-                            ${team.logo}
+                        <div class="logo-3d w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex-shrink-0">
+                            <img src="${team.logo}" alt="${team.name} Logo" class="w-full h-full object-contain" 
+                                 onerror="this.src=''; this.alt='${team.name}'; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-full h-full bg-gradient-to-br from-${team.color}-400 to-${team.color}-600 rounded-lg hidden items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg">
+                                ${team.name.charAt(0)}
+                            </div>
                         </div>
                         <div class="flex-1 text-center sm:text-left">
                             <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">${team.name}</h3>
@@ -557,69 +535,7 @@
             updateLastUpdateTime();
         }
 
-        function generateAdminControls() {
-            const adminControls = document.getElementById('adminControls');
-            adminControls.innerHTML = '';
 
-            teams.forEach(team => {
-                const controlDiv = document.createElement('div');
-                controlDiv.className = 'border rounded-lg p-4 bg-gray-50';
-                controlDiv.innerHTML = `
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 logo-3d text-lg">${team.logo}</div>
-                        <h4 class="font-semibold text-gray-800">${team.name}</h4>
-                    </div>
-                    <div class="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:flex-wrap">
-                        <button onclick="updateScore(${team.id}, -50)" class="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">-50</button>
-                        <button onclick="updateScore(${team.id}, -10)" class="bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">-10</button>
-                        <button onclick="updateScore(${team.id}, -1)" class="bg-red-400 hover:bg-red-500 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">-1</button>
-                        <input type="number" value="${team.score}" onchange="setScore(${team.id}, this.value)" 
-                               class="col-span-3 sm:col-span-1 sm:w-20 px-2 py-1 border rounded text-center text-xs sm:text-sm">
-                        <button onclick="updateScore(${team.id}, 1)" class="bg-green-400 hover:bg-green-500 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">+1</button>
-                        <button onclick="updateScore(${team.id}, 10)" class="bg-green-500 hover:bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">+10</button>
-                        <button onclick="updateScore(${team.id}, 50)" class="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm transform hover:scale-105 transition-all">+50</button>
-                    </div>
-                `;
-                adminControls.appendChild(controlDiv);
-            });
-        }
-
-        function updateScore(teamId, change) {
-            const team = teams.find(t => t.id === teamId);
-            if (team) {
-                team.score = Math.max(0, team.score + change);
-                renderScoreboard();
-                generateAdminControls();
-            }
-        }
-
-        function setScore(teamId, newScore) {
-            const team = teams.find(t => t.id === teamId);
-            if (team) {
-                team.score = Math.max(0, parseInt(newScore) || 0);
-                renderScoreboard();
-            }
-        }
-
-        function resetScores() {
-            if (confirm('Are you sure you want to reset all scores to 0?')) {
-                teams.forEach(team => team.score = 0);
-                renderScoreboard();
-                generateAdminControls();
-            }
-        }
-
-        function toggleAdmin() {
-            const panel = document.getElementById('adminPanel');
-            if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                panel.classList.add('flex');
-                generateAdminControls();
-            } else {
-                panel.classList.add('hidden');
-                panel.classList.remove('flex');
-            }
-        }
 
         // Initialize everything
         createParticles();
@@ -628,5 +544,5 @@
         // Auto-refresh timestamp every 30 seconds
         setInterval(updateLastUpdateTime, 30000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97922b0e444134c9',t:'MTc1Njg3MDIyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97923732b7bb34c9',t:'MTc1Njg3MDcyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
