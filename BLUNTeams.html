@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-html lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,6 +51,7 @@ html lang="en">
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
         
         .team-card::before {
@@ -97,12 +98,6 @@ html lang="en">
         .rank-4 {
             background: linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(75, 85, 99, 0.05) 100%);
             border-color: rgba(107, 114, 128, 0.15);
-        }
-        
-        .neon-text {
-            text-shadow: 
-                0 0 2px currentColor,
-                0 0 4px currentColor;
         }
         
         .score-glow {
@@ -153,6 +148,7 @@ html lang="en">
         .floating-logo {
             animation: logoFloat 6s ease-in-out infinite;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            position: relative;
         }
         
         @keyframes logoFloat {
@@ -162,18 +158,18 @@ html lang="en">
         
         .crown-champion {
             position: absolute;
-            top: -40px;
-            right: -30px;
-            font-size: 5rem;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
             animation: crownBounce 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1)) drop-shadow(0 0 60px rgba(255, 215, 0, 1)) drop-shadow(0 0 90px rgba(255, 215, 0, 0.8));
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
             z-index: 100;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 215, 0, 0.8);
         }
         
         @keyframes crownBounce {
-            0%, 100% { transform: translateY(0px) rotate(-10deg); }
-            50% { transform: translateY(-5px) rotate(10deg); }
+            0%, 100% { transform: translateX(-50%) translateY(0px) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-5px) rotate(5deg); }
         }
         
         .team-red-glow {
@@ -254,6 +250,68 @@ html lang="en">
             }
         }
         
+        /* Interactive Effects */
+        .fire-effect {
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background: linear-gradient(to top, #ff4757, #ff6b35, #ffa502);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: fireFlicker 0.5s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        
+        @keyframes fireFlicker {
+            0% { transform: rotate(-2deg) scale(1); }
+            100% { transform: rotate(2deg) scale(1.1); }
+        }
+        
+        .water-drop {
+            position: absolute;
+            width: 6px;
+            height: 8px;
+            background: #3742fa;
+            border-radius: 50% 50% 50% 0;
+            animation: waterDrop 1s ease-in forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes waterDrop {
+            0% { transform: translateY(-20px) rotate(45deg); opacity: 1; }
+            100% { transform: translateY(100px) rotate(45deg); opacity: 0; }
+        }
+        
+        .earth-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #2ed573;
+            border-radius: 2px;
+            animation: earthRumble 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes earthRumble {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-30px) scale(1.5); opacity: 0.8; }
+            100% { transform: translateY(50px) scale(0.5); opacity: 0; }
+        }
+        
+        .wind-line {
+            position: absolute;
+            width: 30px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffa502, transparent);
+            animation: windSweep 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes windSweep {
+            0% { transform: translateX(-50px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(200px); opacity: 0; }
+        }
+        
         .mobile-optimized {
             padding: 1rem;
         }
@@ -265,9 +323,8 @@ html lang="en">
             }
             
             .crown-champion {
-                font-size: 3.5rem;
-                top: -25px;
-                right: -20px;
+                font-size: 2rem;
+                top: -10px;
             }
         }
     </style>
@@ -296,7 +353,7 @@ html lang="en">
                 <div class="flex flex-col items-center">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-4 h-4 bg-red-500 rounded-full live-pulse"></div>
-                        <span class="text-gray-400 font-bold text-xl neon-text">LIVE</span>
+                        <span class="text-white font-bold text-xl">LIVE</span>
                     </div>
                     <div class="text-gray-300 font-mono text-sm" id="lastUpdate"></div>
                 </div>
@@ -310,13 +367,13 @@ html lang="en">
                 </div>
             </div>
             
-            <h1 class="text-4xl md:text-7xl font-orbitron font-black text-gray-400 mb-2 neon-text">
+            <h1 class="text-4xl md:text-7xl font-orbitron font-black text-white mb-2">
                 INTRAMURALS 2025
             </h1>
             <h2 class="text-xl md:text-3xl font-rajdhani font-bold text-cyan-400 mb-2">
                 LIVE SCOREBOARD
             </h2>
-            <p class="text-gray-400 text-lg">
+            <p class="text-white text-lg">
                 Bonifacio Luz Natividad Educational Foundation, Inc.
             </p>
         </div>
@@ -338,28 +395,28 @@ html lang="en">
                 id: 1,
                 name: "FLAMING FORGERS",
                 color: "red",
-                score: 0,
+                score: 1250,
                 logo: "RED.png"
             },
             {
                 id: 2,
                 name: "BLUE AQUAFORCE", 
                 color: "blue",
-                score: 0,
+                score: 1180,
                 logo: "BLUE.png"
             },
             {
                 id: 3,
                 name: "GEO DYNAMOS",
                 color: "green",
-                score: 0,
+                score: 1095,
                 logo: "GREEN.png"
             },
             {
                 id: 4,
                 name: "WIND WARRIORS",
                 color: "yellow",
-                score: 0,
+                score: 1320,
                 logo: "YELLOW.png"
             }
         ];
@@ -381,6 +438,58 @@ html lang="en">
         function updateLastUpdateTime() {
             const now = new Date();
             document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+        }
+
+        function createFireEffect(card) {
+            for (let i = 0; i < 15; i++) {
+                const fire = document.createElement('div');
+                fire.className = 'fire-effect';
+                fire.style.left = Math.random() * 100 + '%';
+                fire.style.bottom = '0px';
+                fire.style.animationDelay = Math.random() * 0.5 + 's';
+                card.appendChild(fire);
+                
+                setTimeout(() => fire.remove(), 2000);
+            }
+        }
+
+        function createWaterEffect(card) {
+            for (let i = 0; i < 20; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'water-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.top = '0px';
+                drop.style.animationDelay = Math.random() * 0.5 + 's';
+                card.appendChild(drop);
+                
+                setTimeout(() => drop.remove(), 1500);
+            }
+        }
+
+        function createEarthEffect(card) {
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'earth-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.bottom = '20px';
+                particle.style.animationDelay = Math.random() * 0.3 + 's';
+                card.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1500);
+            }
+        }
+
+        function createWindEffect(card) {
+            for (let i = 0; i < 10; i++) {
+                const line = document.createElement('div');
+                line.className = 'wind-line';
+                line.style.top = Math.random() * 80 + 20 + '%';
+                line.style.left = '0px';
+                line.style.animationDelay = Math.random() * 0.3 + 's';
+                card.appendChild(line);
+                
+                setTimeout(() => line.remove(), 1500);
+            }
         }
 
         function renderScoreboard() {
@@ -425,13 +534,13 @@ html lang="en">
                 
                 const teamCard = document.createElement('div');
                 teamCard.className = `team-card glass-card rounded-3xl p-6 md:p-8 ${getRankClass(rank)} relative`;
+                teamCard.setAttribute('data-team', team.color);
                 
                 teamCard.innerHTML = `
-                    ${isChampion ? '<div class="crown-champion">👑</div>' : ''}
-                    
                     <div class="flex flex-col md:flex-row items-center gap-6 md:gap-8">
                         <!-- Team Logo -->
-                        <div class="floating-logo w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
+                        <div class="floating-logo w-24 h-24 md:w-32 md:h-32 flex-shrink-0 relative">
+                            ${isChampion ? '<div class="crown-champion">👑</div>' : ''}
                             <img src="${team.logo}" alt="${team.name} Logo" class="w-full h-full object-contain" 
                                  onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-full h-full team-${team.color}-glow rounded-2xl hidden items-center justify-center text-white font-bold text-2xl shadow-2xl">
@@ -449,7 +558,7 @@ html lang="en">
                             </div>
                             
                             <!-- Team Name -->
-                            <h3 class="text-2xl md:text-4xl font-rajdhani font-bold text-gray-400 mb-4 neon-text">
+                            <h3 class="text-2xl md:text-4xl font-rajdhani font-bold text-white mb-4">
                                 ${team.name}
                             </h3>
                             
@@ -458,16 +567,34 @@ html lang="en">
                             
                             <!-- Score Display -->
                             <div class="score-glow">
-                                <div class="text-4xl md:text-6xl font-orbitron font-black text-gray-300 mb-2 neon-text">
+                                <div class="text-4xl md:text-6xl font-orbitron font-black text-white mb-2">
                                     ${team.score.toLocaleString()}
                                 </div>
-                                <div class="text-gray-400 font-rajdhani font-semibold text-lg tracking-wider">
+                                <div class="text-white font-rajdhani font-semibold text-lg tracking-wider">
                                     TOTAL POINTS
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
+                
+                // Add click event for interactive effects
+                teamCard.addEventListener('click', () => {
+                    switch(team.color) {
+                        case 'red':
+                            createFireEffect(teamCard);
+                            break;
+                        case 'blue':
+                            createWaterEffect(teamCard);
+                            break;
+                        case 'green':
+                            createEarthEffect(teamCard);
+                            break;
+                        case 'yellow':
+                            createWindEffect(teamCard);
+                            break;
+                    }
+                });
                 
                 scoreboard.appendChild(teamCard);
                 
@@ -490,5 +617,5 @@ html lang="en">
         // Auto-refresh timestamp every 30 seconds
         setInterval(updateLastUpdateTime, 30000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9799717405ab3e50',t:'MTc1Njk0NjUwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979b35f7338aa11e',t:'MTc1Njk2NTA0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
