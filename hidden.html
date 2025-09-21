@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy BLUN Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #90EE90 100%);
+            cursor: pointer;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+
+        #gameOverScreen {
+            display: none;
+        }
+
+        .title {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        #score {
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(1.5rem, 6vw, 3rem);
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            z-index: 5;
+        }
+
+        #instructions {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            opacity: 0.9;
+        }
+
+        .final-score {
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            margin-bottom: 1rem;
+            color: #FFD700;
+        }
+
+
+
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.7;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 100px)); }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="clouds">
+            <div class="cloud" style="width: 80px; height: 40px; top: 10%; animation-delay: 0s;"></div>
+            <div class="cloud" style="width: 60px; height: 30px; top: 20%; animation-delay: -5s;"></div>
+            <div class="cloud" style="width: 100px; height: 50px; top: 15%; animation-delay: -10s;"></div>
+        </div>
+        
+        <div id="score">0</div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="startScreen">
+            <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLUN Logo" style="width: 120px; height: auto; margin-bottom: 1rem;" onerror="this.src=''; this.alt='Logo failed to load'; this.style.display='none';">
+            <h1 class="title">Flappy Bird</h1>
+            <div id="instructions">
+                <p>🖱️ Click or tap to make the bird fly!</p>
+                <p>🎯 Avoid the pipes and score points!</p>
+            </div>
+            <button class="button" onclick="startGame()">🚀 Start Game</button>
+        </div>
+        
+        <div id="gameOverScreen">
+            <h1 class="title">Game Over!</h1>
+            <div class="final-score" id="finalScore">Score: 0</div>
+            <button class="button" onclick="restartGame()">🔄 Play Again</button>
+            <button class="button" onclick="goToMenu()">🏠 Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        // Game variables
+        let gameState = 'menu'; // 'menu', 'playing', 'gameOver'
+        let score = 0;
+        let gameSpeed = 2;
+        let gravity = 0.4;
+        let jumpPower = -8;
+
+        // Bird object
+        let bird = {
+            x: 100,
+            y: 200,
+            width: 40,
+            height: 40,
+            velocity: 0,
+            image: null,
+            rotation: 0
+        };
+
+        // Pipes array
+        let pipes = [];
+        const pipeWidth = 80;
+        const pipeGap = 240;
+        let pipeTimer = 0;
+
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Adjust bird position for different screen sizes
+            bird.x = canvas.width * 0.15;
+            bird.y = canvas.height / 2;
+        }
+
+
+
+        // Create bird with BLUN logo
+        function createDefaultBird() {
+            const img = new Image();
+            img.src = 'BLUN-NEW-LOGO-2025 HD.png';
+            img.onerror = function() {
+                this.src = '';
+                this.alt = 'Logo failed to load';
+                console.log('Could not load BLUN logo image');
+            };
+            return img;
+        }
+
+        // Initialize game
+        function init() {
+            resizeCanvas();
+            bird.image = createDefaultBird();
+            
+            // Event listeners
+            canvas.addEventListener('click', jump);
+            canvas.addEventListener('touchstart', jump);
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    jump();
+                }
+            });
+            
+            window.addEventListener('resize', resizeCanvas);
+            
+            gameLoop();
+        }
+
+        // Jump function
+        function jump() {
+            if (gameState === 'playing') {
+                bird.velocity = jumpPower;
+            }
+        }
+
+        // Start game
+        function startGame() {
+            gameState = 'playing';
+            startScreen.style.display = 'none';
+            resetGame();
+        }
+
+        // Reset game
+        function resetGame() {
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            bird.rotation = 0;
+            pipes = [];
+            score = 0;
+            pipeTimer = 0;
+            gameSpeed = 2;
+            updateScore();
+        }
+
+        // Restart game
+        function restartGame() {
+            gameState = 'playing';
+            gameOverScreen.style.display = 'none';
+            resetGame();
+        }
+
+        // Go to menu
+        function goToMenu() {
+            gameState = 'menu';
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            resetGame();
+        }
+
+        // Update score
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        // Create pipe
+        function createPipe() {
+            const minHeight = 50;
+            const maxHeight = canvas.height - pipeGap - minHeight;
+            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+            
+            pipes.push({
+                x: canvas.width,
+                topHeight: topHeight,
+                bottomY: topHeight + pipeGap,
+                bottomHeight: canvas.height - (topHeight + pipeGap),
+                passed: false
+            });
+        }
+
+        // Update game
+        function update() {
+            if (gameState !== 'playing') return;
+
+            // Update bird
+            bird.velocity += gravity;
+            bird.y += bird.velocity;
+            
+            // Bird rotation based on velocity
+            bird.rotation = Math.min(Math.max(bird.velocity * 3, -30), 90);
+
+            // Create pipes
+            pipeTimer++;
+            if (pipeTimer > 150) { // Increased spacing between pipes
+                createPipe();
+                pipeTimer = 0;
+            }
+
+            // Update pipes
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
+                pipe.x -= gameSpeed;
+
+                // Check if bird passed pipe
+                if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+                    pipe.passed = true;
+                    score++;
+                    updateScore();
+                    
+                    // Increase game speed slightly
+                    if (score % 5 === 0) {
+                        gameSpeed += 0.2;
+                    }
+                }
+
+                // Remove off-screen pipes
+                if (pipe.x + pipeWidth < 0) {
+                    pipes.splice(i, 1);
+                }
+
+                // Collision detection
+                if (bird.x < pipe.x + pipeWidth && 
+                    bird.x + bird.width > pipe.x) {
+                    if (bird.y < pipe.topHeight || 
+                        bird.y + bird.height > pipe.bottomY) {
+                        gameOver();
+                    }
+                }
+            }
+
+            // Check ground and ceiling collision
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                gameOver();
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            gameState = 'gameOver';
+            finalScoreElement.textContent = `Score: ${score}`;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Draw functions
+        function drawBird() {
+            ctx.save();
+            ctx.translate(bird.x + bird.width/2, bird.y + bird.height/2);
+            ctx.rotate(bird.rotation * Math.PI / 180);
+            
+            ctx.drawImage(bird.image, -bird.width/2, -bird.height/2, bird.width, bird.height);
+            
+            ctx.restore();
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = '#228B22';
+            ctx.strokeStyle = '#006400';
+            ctx.lineWidth = 3;
+            
+            pipes.forEach(pipe => {
+                // Top pipe
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+                ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+                
+                // Bottom pipe
+                ctx.fillRect(pipe.x, pipe.bottomY, pipeWidth, pipe.bottomHeight);
+                ctx.strokeRect(pipe.x, pipe.bottomY, pipeWidth, pipe.bottomHeight);
+                
+                // Pipe caps
+                ctx.fillStyle = '#32CD32';
+                ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, pipeWidth + 10, 30);
+                ctx.fillRect(pipe.x - 5, pipe.bottomY, pipeWidth + 10, 30);
+                ctx.strokeRect(pipe.x - 5, pipe.topHeight - 30, pipeWidth + 10, 30);
+                ctx.strokeRect(pipe.x - 5, pipe.bottomY, pipeWidth + 10, 30);
+                ctx.fillStyle = '#228B22';
+            });
+        }
+
+        function drawGround() {
+            const groundHeight = 50;
+            const gradient = ctx.createLinearGradient(0, canvas.height - groundHeight, 0, canvas.height);
+            gradient.addColorStop(0, '#8B4513');
+            gradient.addColorStop(1, '#654321');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+            
+            // Ground pattern
+            ctx.fillStyle = '#90EE90';
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.fillRect(i, canvas.height - groundHeight, 10, 5);
+            }
+        }
+
+        // Main game loop
+        function gameLoop() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update and draw
+            update();
+            drawGround();
+            drawPipes();
+            drawBird();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'982954b3766ba9a0',t:'MTc1ODQ1NTI3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
