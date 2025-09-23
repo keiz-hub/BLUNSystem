@@ -164,15 +164,15 @@
             <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLUN Logo" style="width: 120px; height: auto; margin-bottom: 1rem;" onerror="this.src=''; this.alt='Logo failed to load'; this.style.display='none';">
             <h1 class="title">Flappy BLUN Teams</h1>
             <div id="instructions">
-                <p>🖱️ Click or tap to make the bird fly!</p>
+                <p>🖱️ Click or tap to make your logo fly!</p>
                 <p>🎯 Avoid the pipes and score points!</p>
             </div>
             <button class="button" onclick="showCharacterSelect()">🚀 Start Game</button>
-            <button class="button" onclick="returnToMain()">🏠 Return to Main</button>
+            <button class="button" onclick="returnToMain()">🏠 Return to Score Monitoring</button>
         </div>
         
-        <div id="characterScreen" style="display: none;">
-            <h1 class="title" style="font-size: clamp(1.8rem, 7vw, 3.5rem);">Choose Your Team</h1>
+        <div id="characterScreen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: none; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 10;">
+            <h1 class="title" style="font-size: clamp(1.8rem, 7vw, 3.5rem);">Choose Your Character</h1>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin: 2rem 0;">
                 <div class="character-option" onclick="selectCharacter('BLUE.png')">
                     <img src="BLUE.png" alt="Blue Logo" style="width: 80px; height: auto; cursor: pointer; border: 3px solid transparent; border-radius: 15px; transition: all 0.3s ease;" onerror="this.src=''; this.alt='Blue logo failed to load';">
@@ -516,5 +516,5 @@
         // Start the game
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98387d9e122d5e02',t:'MTc1ODYxNDI0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9838839f32eab9f9',t:'MTc1ODYxNDQ4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
