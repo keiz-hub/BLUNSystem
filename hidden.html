@@ -161,7 +161,7 @@
         </div>
         
         <div id="gameOverScreen">
-            <h1 class="title">💥Game Over!</h1>
+            <h1 class="title">💥 Game Over!</h1>
             <div class="final-score" id="finalScore">Score: 0</div>
             <button class="button" onclick="restartGame()">🔄 Play Again</button>
             <button class="button" onclick="goToMenu()">🏠 Main Menu</button>
@@ -249,6 +249,7 @@
             if (gameState === 'ready') {
                 gameState = 'playing';
                 readyScreen.style.display = 'none';
+                bird.velocity = jumpPower; // Make bird jump immediately
             } else if (gameState === 'playing') {
                 bird.velocity = jumpPower;
             }
@@ -450,5 +451,5 @@
         // Start the game
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'983762e7017181d8',t:'MTc1ODYwMjY2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9837709ab132fde7',t:'MTc1ODYwMzIyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
