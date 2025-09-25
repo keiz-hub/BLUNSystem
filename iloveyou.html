@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>I LOVE YOU</title>
+  <title>I LOVE YOU Animation</title>
   <script src="https://cdn.jsdelivr.net/npm/@mojs/core"></script>
   <style>
     body {
@@ -35,6 +35,7 @@
         // Stage 1 → I LOVE YOU → I ❤️ YOU
         new mojs.Tween({
           duration: move,
+          delay: 1000,   // wait 1s before changing
           onComplete: () => {
             textEl.textContent = "I ❤️ YOU";
           }
@@ -43,6 +44,7 @@
         // Stage 2 → I ❤️ YOU → I ❤️ U
         new mojs.Tween({
           duration: move,
+          delay: 2000,   // wait 2s total
           onComplete: () => {
             textEl.textContent = "I ❤️ U";
           }
@@ -51,6 +53,7 @@
         // Stage 3 → I ❤️ U → ❤️
         new mojs.Tween({
           duration: move,
+          delay: 3000,   // wait 3s total
           onComplete: () => {
             textEl.textContent = "❤️";
             blop.play();
@@ -73,9 +76,8 @@
       ]);
     };
 
-    // Run the animation
-    const loveTimeline = crtLoveTl();
-    loveTimeline.play();
+    // Run the animation automatically
+    crtLoveTl().play();
   </script>
 </body>
 </html>
