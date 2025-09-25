@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>LOVE Animation</title>
+  <title>I LOVE YOU Animation</title>
   <script src="https://cdn.jsdelivr.net/npm/@mojs/core"></script>
   <style>
     body {
@@ -14,49 +14,66 @@
       color: #ff4081;
       font-size: 80px;
       font-weight: bold;
-      letter-spacing: 15px;
+      font-family: Arial, sans-serif;
+    }
+    #text {
+      letter-spacing: 10px;
     }
   </style>
 </head>
 <body>
-  <span id="l">L</span>
-  <span id="o">O</span>
-  <span id="v">V</span>
-  <span id="e">E</span>
+  <div id="text">I LOVE YOU</div>
 
   <script>
-    // Define your elements
-    const el = {
-      l: document.getElementById("l"),
-      o: document.getElementById("o"),
-      v: document.getElementById("v"),
-      e: document.getElementById("e"),
-      blop: new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3") // mock sound
-    };
+    const textEl = document.getElementById("text");
+    const blop = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
 
-    // Your exact function
     const crtLoveTl = () => {
       const move = 1000;
-      const boom = 200;
-      const easing = "sin.inOut";
-      const easingBoom = "sin.in";
-      const easingOut = "sin.Out";
-      const opts = { duration: move, easing, opacity: 1 };
-      const delta = 150;
 
       return new mojs.Timeline().add([
+        // Stage 1 → I LOVE YOU → I ❤️ YOU
         new mojs.Tween({
           duration: move,
           onComplete: () => {
-            [el.l, el.o, el.v, el.e].forEach((el) =>
-              (el.style.opacity = 0));
-            el.blop.play();
-          },
+            textEl.textContent = "I ❤️ YOU";
+          }
+        }),
+
+        // Stage 2 → I ❤️ YOU → I ❤️ U
+        new mojs.Tween({
+          duration: move,
+          onComplete: () => {
+            textEl.textContent = "I ❤️ U";
+          }
+        }),
+
+        // Stage 3 → I ❤️ U → ❤️
+        new mojs.Tween({
+          duration: move,
+          onComplete: () => {
+            textEl.textContent = "❤️";
+            blop.play();
+
+            // Boom effect
+            new mojs.Shape({
+              shape: 'circle',
+              fill: 'none',
+              stroke: '#ff4081',
+              strokeWidth: { 20: 0 },
+              radius: { 0: 200 },
+              duration: 1000,
+              easing: 'cubic.out',
+              opacity: { 1: 0 },
+              left: '50%',
+              top: '50%'
+            }).play();
+          }
         }),
       ]);
     };
 
-    // Run it
+    // Run the animation
     const loveTimeline = crtLoveTl();
     loveTimeline.play();
   </script>
