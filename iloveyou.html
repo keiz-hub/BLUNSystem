@@ -1,34 +1,79 @@
-<div id="l">L</div>
-<div id="o">O</div>
-<div id="v">V</div>
-<div id="e">E</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hi Love!</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mojs/core"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .letters {
+      font-size: 80px;
+      font-weight: bold;
+      color: #ff4081;
+      letter-spacing: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="letters">
+    <span id="l">L</span>
+    <span id="o">O</span>
+    <span id="v">V</span>
+    <span id="e">E</span>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@mojs/core"></script>
-<script>
-  const el = {
-    l: document.getElementById("l"),
-    o: document.getElementById("o"),
-    v: document.getElementById("v"),
-    e: document.getElementById("e"),
-    blop: { play: () => console.log("💥 blop sound!") } // mock sound
-  };
+  <script>
+    const el = {
+      l: document.getElementById("l"),
+      o: document.getElementById("o"),
+      v: document.getElementById("v"),
+      e: document.getElementById("e"),
+      blop: new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3") // example sound
+    };
 
-  const crtLoveTl = () => {
-    const move = 1000;
-    return new mojs.Timeline().add([
-      new mojs.Tween({
-        duration: move,
-        onComplete: () => {
-          [el.l, el.o, el.v, el.e].forEach((letter) =>
-            letter.style.opacity = 0
-          );
-          el.blop.play();
-        }
-      })
-    ]);
-  };
+    const crtLoveTl = () => {
+      const move = 1000;
 
-  // Create and play
-  const loveTimeline = crtLoveTl();
-  loveTimeline.play();
-</script>
+      return new mojs.Timeline().add([
+        // Fade out letters
+        new mojs.Tween({
+          duration: move,
+          onUpdate: (p) => {
+            [el.l, el.o, el.v, el.e].forEach((letter) => {
+              letter.style.opacity = 1 - p; // gradually fade
+            });
+          },
+          onComplete: () => {
+            el.blop.play();
+          }
+        }),
+
+        // Boom circle
+        new mojs.Shape({
+          shape: 'circle',
+          fill: 'none',
+          stroke: '#ff4081',
+          strokeWidth: { 20: 0 },
+          radius: { 0: 150 },
+          duration: 800,
+          easing: 'cubic.out',
+          opacity: { 1: 0 },
+          left: '50%', top: '50%'
+        })
+      ]);
+    };
+
+    // Create and play timeline
+    const loveTimeline = crtLoveTl();
+    loveTimeline.play();
+  </script>
+</body>
+</html>
