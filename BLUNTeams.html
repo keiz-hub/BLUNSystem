@@ -1,61 +1,679 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Computing</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #1d3557, #457b9d);
-      font-family: Arial, sans-serif;
-      color: #f1faee;
-      text-align: center;
-    }
-
-    .logo {
-      width: 250px;
-      height: 250px;
-      margin-bottom: 20px;
-      perspective: 1000px;
-    }
-
-    .logo img {
-      width: 100%;
-      height: 100%;
-      border-radius: 20px;
-      backface-visibility: hidden;
-      animation: flip 3s infinite linear;
-    }
-
-    @keyframes flip {
-      0% { transform: rotateY(0); }
-      50% { transform: rotateY(180deg); }
-      100% { transform: rotateY(360deg); }
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin: 0;
-    }
-
-    p {
-      font-size: 1rem;
-      opacity: 0.8;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLUN Intramurals 2025 - FINAL RESULTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: bgShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgShift {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            33% { transform: translateX(-20px) translateY(10px); }
+            66% { transform: translateX(20px) translateY(-10px); }
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .champion-card {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 193, 7, 0.2) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 
+                0 0 50px rgba(255, 215, 0, 0.4),
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                inset 0 2px 0 rgba(255, 215, 0, 0.3);
+            animation: championGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes championGlow {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 50px rgba(255, 215, 0, 0.4),
+                    0 20px 60px rgba(0, 0, 0, 0.4),
+                    inset 0 2px 0 rgba(255, 215, 0, 0.3);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px rgba(255, 215, 0, 0.6),
+                    0 25px 70px rgba(0, 0, 0, 0.5),
+                    inset 0 2px 0 rgba(255, 215, 0, 0.5);
+            }
+        }
+        
+        .team-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .team-card:hover::before {
+            left: 100%;
+        }
+        
+        .rank-2, .rank-3, .rank-4 {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .floating-logo {
+            animation: logoFloat 6s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            position: relative;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        
+        .champion-crown {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            animation: crownBounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1));
+            z-index: 100;
+        }
+        
+        @keyframes crownBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0px) rotate(-5deg) scale(1); }
+            50% { transform: translateX(-50%) translateY(-10px) rotate(5deg) scale(1.1); }
+        }
+        
+        .champion-title {
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShine 2s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+        
+        @keyframes titleShine {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: confettiFall 3s linear infinite;
+        }
+        
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .team-red-glow {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+        }
+        
+        .team-blue-glow {
+            background: linear-gradient(135deg, #3742fa, #2f3542);
+            box-shadow: 0 0 20px rgba(55, 66, 250, 0.4);
+        }
+        
+        .team-green-glow {
+            background: linear-gradient(135deg, #2ed573, #1e90ff);
+            box-shadow: 0 0 20px rgba(46, 213, 115, 0.4);
+        }
+        
+        .team-yellow-glow {
+            background: linear-gradient(135deg, #ffa502, #ff6348);
+            box-shadow: 0 0 20px rgba(255, 165, 2, 0.4);
+        }
+        
+        .header-glow {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .final-results-banner {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(255, 215, 0, 0.2));
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: bannerPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes bannerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .fireworks {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: fireworkExplode 2s ease-out infinite;
+        }
+        
+        @keyframes fireworkExplode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .share-button {
+            transition: all 0.3s ease;
+        }
+        
+        .share-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .champion-crown {
+                font-size: 3rem;
+                top: -20px;
+            }
+        }
+    </style>
 </head>
-<body>
-  <div class="logo">
-    <!-- Use your own logo image stored in the same folder -->
-    <img src="Intramurals Logo Final.png" alt="Flipping Logo">
-  </div>
-  <h1>We are currently collecting the Final Scores!</h1>
-  <p>Please check back later.</p>
-</body>
+<body class="min-h-screen">
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    
+    <!-- Fireworks -->
+    <div class="fireworks" id="fireworks"></div>
+    
+    <!-- Confetti -->
+    <div class="fixed inset-0 pointer-events-none z-50" id="confetti"></div>
+
+    <!-- Header -->
+    <header class="header-glow py-6 mb-8">
+        <div class="container mx-auto px-4 text-center">
+            <!-- School Logos -->
+            <div class="flex justify-center items-center gap-8 mb-6">
+                <a href="https://www.blnefi.edu.ph" target="_blank" rel="noopener noreferrer" class="floating-logo w-20 h-20 md:w-24 md:h-24 transition-transform hover:scale-110">
+                    <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLNEFI School Logo" class="w-full h-full object-contain" 
+                         onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl hidden items-center justify-center text-white font-bold text-sm shadow-2xl">
+                        BLUN
+                    </div>
+                </a>
+                
+                <!-- Final Results Indicator -->
+                <div class="flex flex-col items-center">
+                    <div class="final-results-banner px-6 py-3 rounded-full mb-2">
+                        <span class="text-white font-bold text-xl">🏁 FINAL RESULTS</span>
+                    </div>
+                    <div class="text-cyan-400 font-mono text-lg font-bold mb-1" id="realTimeClock"></div>
+                    <div class="text-gray-300 font-mono text-sm">Intramurals Completed</div>
+                </div>
+                
+                <div class="floating-logo w-20 h-20 md:w-24 md:h-24">
+                    <img src="Intramurals Logo Final.png" alt="Intramurals 2025 Logo" class="w-full h-full object-contain" 
+                         onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-full h-full bg-gradient-to-br from-blue-400 to-cyan-400 rounded-xl hidden items-center justify-center text-white font-bold text-sm shadow-2xl">
+                        2025
+                    </div>
+                </div>
+            </div>
+            
+            <h1 class="text-4xl md:text-7xl font-orbitron font-black text-white mb-2">
+                INTRAMURALS 2025
+            </h1>
+            <h2 class="text-xl md:text-3xl font-rajdhani font-bold text-red-400 mb-2">
+                FINAL RESULTS
+            </h2>
+            <p class="text-white text-lg mb-6">
+                Bonifacio Luz Natividad Educational Foundation, Inc.
+            </p>
+            
+            <!-- Header Share Buttons -->
+            <div class="flex justify-center gap-3 mt-4">
+                <button onclick="shareToFacebook()" class="share-button flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                </button>
+                
+                <button onclick="shareToMessenger()" class="share-button flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.1l3.13 3.26L19.764 8.1l-6.573 6.863z"/>
+                    </svg>
+                    Messenger
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Championship Declaration -->
+    <div class="container mx-auto px-4 mb-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="glass-card champion-card rounded-3xl p-8 md:p-12 mb-8">
+                <div class="champion-crown">👑</div>
+                <h2 class="champion-title text-4xl md:text-6xl font-orbitron font-black mb-4">
+                    🏆 CHAMPIONS 🏆
+                </h2>
+                <h3 class="text-3xl md:text-5xl font-rajdhani font-bold text-white mb-6">
+                    FLAMING FORGERS
+                </h3>
+                <div class="text-6xl md:text-8xl font-orbitron font-black text-yellow-400 mb-4">
+                    1,540
+                </div>
+                <div class="text-xl md:text-2xl text-white font-rajdhani font-semibold">
+                    TOTAL POINTS
+                </div>
+                <div class="mt-6 text-lg md:text-xl text-yellow-200">
+                    🎉 Congratulations to the FLAMING FORGERS for their outstanding performance! 🎉
+                </div>
+                
+                <!-- Share Buttons -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <h4 class="text-white font-rajdhani font-semibold text-lg mb-2 sm:mb-0">Share the Victory:</h4>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <!-- Facebook Share Button -->
+                        <button onclick="shareToFacebook()" class="share-button flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            Share on Facebook
+                        </button>
+                        
+                        <!-- Messenger Share Button -->
+                        <button onclick="shareToMessenger()" class="share-button flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-full font-bold shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.1l3.13 3.26L19.764 8.1l-6.573 6.863z"/>
+                            </svg>
+                            Share on Messenger
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Rankings -->
+    <main class="container mx-auto px-4 pb-8">
+        <div class="max-w-6xl mx-auto">
+            <h3 class="text-3xl md:text-4xl font-orbitron font-bold text-white text-center mb-8">
+                FINAL STANDINGS
+            </h3>
+            <div id="scoreboard" class="space-y-6">
+                <!-- Teams will be dynamically rendered here -->
+            </div>
+            
+            <!-- Bottom Share Section -->
+            <div class="mt-12 text-center">
+                <div class="glass-card rounded-2xl p-6 mb-8">
+                    <h4 class="text-2xl font-rajdhani font-bold text-white mb-4">
+                        🎉 Share These Amazing Results! 🎉
+                    </h4>
+                    <p class="text-gray-300 mb-6">
+                        Celebrate the champions and show your team spirit!
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <button onclick="shareToFacebook()" class="share-button flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            Share on Facebook
+                        </button>
+                        
+                        <button onclick="shareToMessenger()" class="share-button flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.1l3.13 3.26L19.764 8.1l-6.573 6.863z"/>
+                            </svg>
+                            Share on Messenger
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Final team data
+        let teams = [
+            {
+                id: 4,
+                name: "WIND WARRIORS",
+                color: "yellow",
+                score: 1275,
+                logo: "YELLOW.png"
+            },
+            {
+                id: 1,
+                name: "FLAMING FORGERS",
+                color: "red",
+                score: 1540,
+                logo: "RED.png"
+            },
+            {
+                id: 2,
+                name: "BLUE AQUAFORCE", 
+                color: "blue",
+                score: 1220,
+                logo: "BLUE.png"
+            },
+            {
+                id: 3,
+                name: "GEO DYNAMOS",
+                color: "green",
+                score: 1330,
+                logo: "GREEN.png"
+            }
+        ];
+
+        function createConfetti() {
+            const confettiContainer = document.getElementById('confetti');
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confettiContainer.appendChild(confetti);
+            }
+        }
+
+        function createFireworks() {
+            const fireworksContainer = document.getElementById('fireworks');
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1'];
+            
+            setInterval(() => {
+                for (let i = 0; i < 5; i++) {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = Math.random() * 100 + '%';
+                    firework.style.top = Math.random() * 100 + '%';
+                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.animationDelay = Math.random() * 0.5 + 's';
+                    fireworksContainer.appendChild(firework);
+                    
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 2000);
+                }
+            }, 1000);
+        }
+
+        function updateRealTimeClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('realTimeClock').textContent = timeString;
+        }
+
+        function renderScoreboard() {
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            const scoreboard = document.getElementById('scoreboard');
+            
+            scoreboard.innerHTML = '';
+
+            sortedTeams.forEach((team, index) => {
+                const rank = index + 1;
+                
+                const getRankBadge = (rank) => {
+                    switch(rank) {
+                        case 1: return '🥇 1ST PLACE - CHAMPION';
+                        case 2: return '🥈 2ND PLACE';
+                        case 3: return '🥉 3RD PLACE';
+                        case 4: return '🏅 4TH PLACE';
+                        default: return `#${rank}`;
+                    }
+                };
+                
+                const getRankColors = (rank) => {
+                    switch(rank) {
+                        case 1: return 'from-yellow-400 to-yellow-600';
+                        case 2: return 'from-gray-300 to-gray-500';
+                        case 3: return 'from-orange-400 to-orange-600';
+                        case 4: return 'from-gray-400 to-gray-600';
+                        default: return 'from-gray-400 to-gray-600';
+                    }
+                };
+                
+                const teamCard = document.createElement('div');
+                teamCard.className = `team-card glass-card rounded-3xl p-6 md:p-8 rank-${rank} relative`;
+                
+                teamCard.innerHTML = `
+                    <div class="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                        <!-- Team Logo -->
+                        <div class="floating-logo w-20 h-20 md:w-24 md:h-24 flex-shrink-0 relative">
+                            <img src="${team.logo}" alt="${team.name} Logo" class="w-full h-full object-contain" 
+                                 onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-full h-full team-${team.color}-glow rounded-2xl hidden items-center justify-center text-white font-bold text-xl shadow-2xl">
+                                ${team.name.charAt(0)}
+                            </div>
+                        </div>
+                        
+                        <!-- Team Info -->
+                        <div class="flex-1 text-center md:text-left">
+                            <!-- Rank Badge -->
+                            <div class="inline-flex items-center gap-2 mb-4">
+                                <div class="bg-gradient-to-r ${getRankColors(rank)} text-white px-4 py-2 rounded-full font-bold text-lg">
+                                    ${getRankBadge(rank)}
+                                </div>
+                            </div>
+                            
+                            <!-- Team Name -->
+                            <h3 class="text-2xl md:text-3xl font-rajdhani font-bold text-white mb-4">
+                                ${team.name}
+                            </h3>
+                            
+                            <!-- Color Bar -->
+                            <div class="team-${team.color}-glow h-2 rounded-full mb-4 opacity-80"></div>
+                            
+                            <!-- Score Display -->
+                            <div class="flex items-center justify-center md:justify-start gap-4 mb-4">
+                                <div class="text-3xl md:text-4xl font-orbitron font-black text-white">
+                                    ${team.score.toLocaleString()}
+                                </div>
+                                <div class="text-gray-300 font-rajdhani font-semibold text-lg">
+                                    POINTS
+                                </div>
+                            </div>
+                            
+                            <!-- Individual Team Share Buttons -->
+                            <div class="flex flex-col sm:flex-row gap-2 justify-center md:justify-start">
+                                <button onclick="shareTeamToFacebook('${team.name}', ${team.score}, ${rank})" class="share-button flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                    Share
+                                </button>
+                                
+                                <button onclick="shareTeamToMessenger('${team.name}', ${team.score}, ${rank})" class="share-button flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.1l3.13 3.26L19.764 8.1l-6.573 6.863z"/>
+                                    </svg>
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                scoreboard.appendChild(teamCard);
+            });
+        }
+
+        // Social Media Share Functions
+        function shareToFacebook() {
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            const shareText = `🏆 BLNEFI Intramurals 2025 FINAL RESULTS! 🏆
+🥇 1st Place: ${sortedTeams[0].name} - ${sortedTeams[0].score.toLocaleString()} points
+🥈 2nd Place: ${sortedTeams[1].name} - ${sortedTeams[1].score.toLocaleString()} points  
+🥉 3rd Place: ${sortedTeams[2].name} - ${sortedTeams[2].score.toLocaleString()} points
+🏅 4th Place: ${sortedTeams[3].name} - ${sortedTeams[3].score.toLocaleString()} points
+
+Congratulations to all teams for an amazing competition! 🎉`;
+            const shareUrl = encodeURIComponent(window.location.href);
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
+            window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+        }
+        
+        function shareToMessenger() {
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            const shareText = `🏆 BLNEFI Intramurals 2025 FINAL RESULTS! 🏆
+🥇 1st: ${sortedTeams[0].name} - ${sortedTeams[0].score.toLocaleString()} pts
+🥈 2nd: ${sortedTeams[1].name} - ${sortedTeams[1].score.toLocaleString()} pts  
+🥉 3rd: ${sortedTeams[2].name} - ${sortedTeams[2].score.toLocaleString()} pts
+🏅 4th: ${sortedTeams[3].name} - ${sortedTeams[3].score.toLocaleString()} pts
+
+Amazing competition! 🎉 Check out the full results!`;
+            const shareUrl = encodeURIComponent(window.location.href);
+            // For Messenger, we'll use a generic share approach since it requires app configuration
+            const messengerUrl = `https://www.facebook.com/dialog/share?app_id=YOUR_APP_ID&href=${shareUrl}&redirect_uri=${shareUrl}`;
+            window.open(messengerUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+        }
+
+        // Individual Team Share Functions
+        function shareTeamToFacebook(teamName, teamScore, rank) {
+            const getRankEmoji = (rank) => {
+                switch(rank) {
+                    case 1: return '🥇';
+                    case 2: return '🥈';
+                    case 3: return '🥉';
+                    case 4: return '🏅';
+                    default: return '🏆';
+                }
+            };
+            
+            const getRankText = (rank) => {
+                switch(rank) {
+                    case 1: return '1st Place - CHAMPIONS';
+                    case 2: return '2nd Place';
+                    case 3: return '3rd Place';
+                    case 4: return '4th Place';
+                    default: return `${rank}th Place`;
+                }
+            };
+            
+            const shareText = `${getRankEmoji(rank)} ${teamName} finished in ${getRankText(rank)} at BLNEFI Intramurals 2025! 
+Final Score: ${teamScore.toLocaleString()} points! 🎉
+${rank === 1 ? 'Congratulations to our CHAMPIONS! 👑' : 'Great job team! 💪'}
+#BLNEFIIntramurals2025 #TeamSpirit`;
+            
+            const shareUrl = encodeURIComponent(window.location.href);
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
+            window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+        }
+        
+        function shareTeamToMessenger(teamName, teamScore, rank) {
+            const getRankEmoji = (rank) => {
+                switch(rank) {
+                    case 1: return '🥇';
+                    case 2: return '🥈';
+                    case 3: return '🥉';
+                    case 4: return '🏅';
+                    default: return '🏆';
+                }
+            };
+            
+            const getRankText = (rank) => {
+                switch(rank) {
+                    case 1: return '1st Place - CHAMPIONS';
+                    case 2: return '2nd Place';
+                    case 3: return '3rd Place';
+                    case 4: return '4th Place';
+                    default: return `${rank}th Place`;
+                }
+            };
+            
+            const shareText = `${getRankEmoji(rank)} ${teamName} - ${getRankText(rank)} at BLNEFI Intramurals 2025! 
+Score: ${teamScore.toLocaleString()} points! 🎉
+${rank === 1 ? 'Our CHAMPIONS! 👑' : 'Amazing performance! 💪'}`;
+            
+            const shareUrl = encodeURIComponent(window.location.href);
+            const messengerUrl = `https://www.facebook.com/dialog/share?app_id=YOUR_APP_ID&href=${shareUrl}&redirect_uri=${shareUrl}`;
+            window.open(messengerUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+        }
+
+        // Initialize
+        createConfetti();
+        createFireworks();
+        renderScoreboard();
+        updateRealTimeClock();
+        
+        // Update real-time clock every second
+        setInterval(updateRealTimeClock, 1000);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98724f467144b9fb',t:'MTc1OTIyMDUxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
