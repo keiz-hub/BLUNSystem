@@ -261,7 +261,7 @@
             <!-- School Logos -->
             <div class="flex justify-center items-center gap-8 mb-6">
                 <a href="BLUNSystem/hidden.html" target="_blank" rel="noopener noreferrer" class="floating-logo w-20 h-20 md:w-24 md:h-24 transition-transform hover:scale-110">
-                    <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLNEFI School Logo" class="w-full h-full object-contain" 
+                    <img src="BLUN-NEW-LOGO-2025 HD.png" alt="BLUN School Logo" class="w-full h-full object-contain" 
                          onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl hidden items-center justify-center text-white font-bold text-sm shadow-2xl">
                         BLUN
@@ -577,31 +577,57 @@
         // Social Media Share Functions
         function shareToFacebook() {
             const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
-            const shareText = `🏆 BLNEFI Intramurals 2025 FINAL RESULTS! 🏆
+            const shareText = `🏆 BLUN Intramurals 2025 FINAL RESULTS! 🏆
 🥇 1st Place: ${sortedTeams[0].name} - ${sortedTeams[0].score.toLocaleString()} points
 🥈 2nd Place: ${sortedTeams[1].name} - ${sortedTeams[1].score.toLocaleString()} points  
 🥉 3rd Place: ${sortedTeams[2].name} - ${sortedTeams[2].score.toLocaleString()} points
 🏅 4th Place: ${sortedTeams[3].name} - ${sortedTeams[3].score.toLocaleString()} points
 
 Congratulations to all teams for an amazing competition! 🎉`;
-            const shareUrl = encodeURIComponent(window.location.href);
-            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
-            window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            
+            // Check if Web Share API is available (mobile devices)
+            if (navigator.share) {
+                navigator.share({
+                    title: 'BLUN Intramurals 2025 Final Results',
+                    text: shareText,
+                    url: window.location.href
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback for desktop
+                const shareUrl = encodeURIComponent(window.location.href);
+                const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
+                window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            }
         }
         
         function shareToMessenger() {
             const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
-            const shareText = `🏆 BLNEFI Intramurals 2025 FINAL RESULTS! 🏆
+            const shareText = `🏆 BLUN Intramurals 2025 FINAL RESULTS! 🏆
 🥇 1st: ${sortedTeams[0].name} - ${sortedTeams[0].score.toLocaleString()} pts
 🥈 2nd: ${sortedTeams[1].name} - ${sortedTeams[1].score.toLocaleString()} pts  
 🥉 3rd: ${sortedTeams[2].name} - ${sortedTeams[2].score.toLocaleString()} pts
 🏅 4th: ${sortedTeams[3].name} - ${sortedTeams[3].score.toLocaleString()} pts
 
 Amazing competition! 🎉 Check out the full results!`;
-            const shareUrl = encodeURIComponent(window.location.href);
-            // For Messenger, we'll use a generic share approach since it requires app configuration
-            const messengerUrl = `https://www.facebook.com/dialog/share?app_id=YOUR_APP_ID&href=${shareUrl}&redirect_uri=${shareUrl}`;
-            window.open(messengerUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            
+            // Check if Web Share API is available (mobile devices)
+            if (navigator.share) {
+                navigator.share({
+                    title: 'BLUN Intramurals 2025 Final Results',
+                    text: shareText,
+                    url: window.location.href
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback for desktop - copy to clipboard
+                navigator.clipboard.writeText(shareText + '\n' + window.location.href).then(() => {
+                    alert('Results copied to clipboard! You can now paste and share.');
+                }).catch(() => {
+                    // Final fallback
+                    const shareUrl = encodeURIComponent(window.location.href);
+                    const messengerUrl = `https://m.me/?text=${encodeURIComponent(shareText)}`;
+                    window.open(messengerUrl, '_blank');
+                });
+            }
         }
 
         // Individual Team Share Functions
@@ -626,14 +652,24 @@ Amazing competition! 🎉 Check out the full results!`;
                 }
             };
             
-            const shareText = `${getRankEmoji(rank)} ${teamName} finished in ${getRankText(rank)} at BLNEFI Intramurals 2025! 
+            const shareText = `${getRankEmoji(rank)} ${teamName} finished in ${getRankText(rank)} at BLUN Intramurals 2025! 
 Final Score: ${teamScore.toLocaleString()} points! 🎉
 ${rank === 1 ? 'Congratulations to our CHAMPIONS! 👑' : 'Great job team! 💪'}
-#BLNEFIIntramurals2025 #TeamSpirit`;
+#BLUNIntramurals2025`;
             
-            const shareUrl = encodeURIComponent(window.location.href);
-            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
-            window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            // Check if Web Share API is available (mobile devices)
+            if (navigator.share) {
+                navigator.share({
+                    title: `${teamName} - ${getRankText(rank)}`,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback for desktop
+                const shareUrl = encodeURIComponent(window.location.href);
+                const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${encodeURIComponent(shareText)}`;
+                window.open(facebookUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            }
         }
         
         function shareTeamToMessenger(teamName, teamScore, rank) {
@@ -657,13 +693,28 @@ ${rank === 1 ? 'Congratulations to our CHAMPIONS! 👑' : 'Great job team! 💪'
                 }
             };
             
-            const shareText = `${getRankEmoji(rank)} ${teamName} - ${getRankText(rank)} at BLNEFI Intramurals 2025! 
+            const shareText = `${getRankEmoji(rank)} ${teamName} - ${getRankText(rank)} at BLUN Intramurals 2025! 
 Score: ${teamScore.toLocaleString()} points! 🎉
 ${rank === 1 ? 'Our CHAMPIONS! 👑' : 'Amazing performance! 💪'}`;
             
-            const shareUrl = encodeURIComponent(window.location.href);
-            const messengerUrl = `https://www.facebook.com/dialog/share?app_id=YOUR_APP_ID&href=${shareUrl}&redirect_uri=${shareUrl}`;
-            window.open(messengerUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+            // Check if Web Share API is available (mobile devices)
+            if (navigator.share) {
+                navigator.share({
+                    title: `${teamName} - ${getRankText(rank)}`,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback for desktop - copy to clipboard
+                navigator.clipboard.writeText(shareText + '\n' + window.location.href).then(() => {
+                    alert('Team results copied to clipboard! You can now paste and share.');
+                }).catch(() => {
+                    // Final fallback
+                    const shareUrl = encodeURIComponent(window.location.href);
+                    const messengerUrl = `https://m.me/?text=${encodeURIComponent(shareText)}`;
+                    window.open(messengerUrl, '_blank');
+                });
+            }
         }
 
         // Initialize
@@ -675,5 +726,5 @@ ${rank === 1 ? 'Our CHAMPIONS! 👑' : 'Amazing performance! 💪'}`;
         // Update real-time clock every second
         setInterval(updateRealTimeClock, 1000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98724f467144b9fb',t:'MTc1OTIyMDUxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98726766e763b9fb',t:'MTc1OTIyMTUwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
